@@ -14,4 +14,5 @@ import {TransactionService} from "./services/transaction.service";
 export class AppComponent {
  private transactionService = inject(TransactionService);
  transactions = this.transactionService.transactions;
+ title = 'Budget tracker'
 }

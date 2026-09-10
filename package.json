@@ -1,5 +1,5 @@
 {
-  "name": "angular-playground",
+  "name": "ag-budget-tracker",
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
