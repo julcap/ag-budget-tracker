@@ -1,0 +1,4 @@
+<div>
+  {{ transaction().date }} — {{ transaction().merchant }} ({{ transaction().category }}):
+  {{ transaction().amount | currency: 'DKK': 'symbol':'1.2-2':'da' }}
+</div>
