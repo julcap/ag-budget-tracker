@@ -1,18 +1,15 @@
-import {Component, inject} from '@angular/core';
-import {BalanceCardComponent} from "./components/balance-card/balance-card.component";
-import {TransactionRowComponent} from "./components/transaction-row/transaction-row.component";
-import {TransactionService} from "./services/transaction.service";
+import {Component} from '@angular/core';
+import {RouterLink, RouterLinkActive, RouterOutlet} from "@angular/router";
+
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [BalanceCardComponent,TransactionRowComponent],
+  imports: [RouterOutlet,RouterLink,RouterLinkActive],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
 
 export class AppComponent {
- private transactionService = inject(TransactionService);
- transactions = this.transactionService.transactions;
- title = 'Budget tracker'
+  title= 'Budget tracker'
 }

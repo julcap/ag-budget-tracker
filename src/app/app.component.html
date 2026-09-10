@@ -1,9 +1,5 @@
-<h1>Ledger</h1>
-<app-balance-card label="Balance" value="$2,450.00"/>
-<app-balance-card label="Income this month" value="$4,200.00"/>
-<app-balance-card label="Spent this month" value="$1,750.00"/>
-<h3>Recent trasactions</h3>
-@for (t of transactions(); track t.id) {
-  <app-transaction-row
-     [transaction]="t"/>
-}
+<nav>
+  <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+  <a routerLink="/transactions" routerLinkActive="active">Transactions</a>
+</nav>
+<router-outlet />

@@ -1,0 +1,9 @@
+<h1>Ledger</h1>
+<app-balance-card label="Balance" value="$2,450.00"/>
+<app-balance-card label="Income this month" value="$4,200.00"/>
+<app-balance-card label="Spent this month" value="$1,750.00"/>
+<h3>Recent transactions</h3>
+@for (t of transactions(); track t.id) {
+  <app-transaction-row
+    [transaction]="t"/>
+}
