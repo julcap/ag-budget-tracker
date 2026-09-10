@@ -1,2 +1,5 @@
 <h1>Transactions</h1>
-<p>Coming soon.</p>
+
+@for (t of transactions(); track t.id) {
+  <app-transaction-row [transaction]="t"></app-transaction-row>
+}
