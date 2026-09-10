@@ -1,19 +1,25 @@
-import {Injectable, signal} from '@angular/core';
+import {inject, Injectable, signal} from '@angular/core';
 import {Transaction} from "../models/transaction";
+import {HttpClient} from "@angular/common/http";
 
 @Injectable({  providedIn: 'root'})
 export class TransactionService {
-  constructor() { }
-  private _transactions = signal<Transaction[]>([
-    { id: 1, merchant: 'Whole Foods Market', category: 'Groceries', date: 'Sep 8', amount: -84.20 },
-    { id: 2, merchant: 'Spotify', category: 'Entertainment', date: 'Sep 7', amount: -11.99 },
-    { id: 3, merchant: 'Acme Corp Payroll', category: 'Income', date: 'Sep 6', amount: 2100.00 },
-  ]);
+  private http = inject(HttpClient);
+  private _transactions = signal<Transaction[]>([])
+
   transactions = this._transactions.asReadonly();
 
+  constructor() {
+    this.http.get<Transaction[]>('http://localhost:3001/transactions')
+      .subscribe(data=> this._transactions.set(data))
+  }
+
+
   add(transaction: Omit<Transaction, 'id'>) {
-    const newId = Math.max(0, ...this._transactions().map(t => t.id)) + 1;
-    this._transactions.update(list => [...list, { id: newId, ...transaction }]);
+    this.http.post<Transaction>('http://localhost:3001/transactions', transaction)
+      .subscribe(created => {
+        this._transactions.update(list => [...list, created]);
+      });
   }
 
 }
