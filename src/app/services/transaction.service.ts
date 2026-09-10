@@ -10,4 +10,10 @@ export class TransactionService {
     { id: 3, merchant: 'Acme Corp Payroll', category: 'Income', date: 'Sep 6', amount: 2100.00 },
   ]);
   transactions = this._transactions.asReadonly();
+
+  add(transaction: Omit<Transaction, 'id'>) {
+    const newId = Math.max(0, ...this._transactions().map(t => t.id)) + 1;
+    this._transactions.update(list => [...list, { id: newId, ...transaction }]);
+  }
+
 }

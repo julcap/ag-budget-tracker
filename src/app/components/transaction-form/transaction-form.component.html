@@ -1,0 +1,21 @@
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <input formControlName="merchant" placeholder="Merchant" />
+  @if (form.controls.merchant.invalid && form.controls.merchant.touched) {
+    <div>Merchant is required</div>
+  }
+
+  <input formControlName="amount" type="number" placeholder="Amount" />
+  @if (form.controls.amount.invalid && form.controls.amount.touched) {
+    <div>Enter an amount greater than 0</div>
+  }
+
+  <select formControlName="category">
+    <option>Groceries</option>
+    <option>Rent</option>
+    <option>Transport</option>
+    <option>Entertainment</option>
+    <option>Utilities</option>
+  </select>
+
+  <button type="submit">Add transaction</button>
+</form>

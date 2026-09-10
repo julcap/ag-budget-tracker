@@ -1,5 +1,12 @@
 <h1>Transactions</h1>
 
-@for (t of transactions(); track t.id) {
+<input type="text" placeholder="Search merchant…" (input)="handleSearch($event)"/>
+
+<input [(ngModel)]="name" />
+<p>Helo, {{ name }}</p>
+
+@for (t of filteredTransactions(); track t.id) {
   <app-transaction-row [transaction]="t"></app-transaction-row>
 }
+
+<app-transaction-form />
