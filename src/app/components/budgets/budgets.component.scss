@@ -1,0 +1,37 @@
+.budget-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.budget-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 18px 20px;
+}
+
+.budget-card-header { display: flex; justify-content: space-between; align-items: flex-start; }
+.budget-name { font-weight: 600; font-size: 14px; }
+.budget-meta { font-size: 12px; color: var(--color-text-muted); margin-top: 2px; }
+
+.budget-actions { display: flex; align-items: center; gap: 8px; }
+.icon-btn { background: none; border: 1px solid var(--color-border); border-radius: 6px; padding: 5px 8px; }
+
+.status-badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+.status-ok { color: var(--color-ok); background: #ebfbee; }
+.status-near { color: var(--color-warn); background: #fff4e6; }
+.status-over { color: var(--color-danger); background: #fff5f5; }
+
+.progress-track { height: 8px; background: #efeee9; border-radius: 4px; overflow: hidden; margin-top: 12px; }
+.progress-fill { height: 100%; border-radius: 4px; }
+.fill-ok { background: var(--color-ok); }
+.fill-near { background: var(--color-warn); }
+.fill-over { background: var(--color-danger); }
+
+.edit-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+.edit-input { width: 70px; padding: 5px 8px; border: 1px solid var(--color-border); border-radius: 5px; }
+.btn { border-radius: 5px; padding: 5px 10px; font-size: 12px; font-weight: 600; border: 1px solid var(--color-border); }
+.btn-primary { background: var(--color-accent); color: #fff; border-color: var(--color-accent); }
+.btn-ghost { background: none; }

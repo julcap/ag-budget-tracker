@@ -36,5 +36,38 @@
       "id": "2n6Ow0aBOFE"
     }
   ],
+  "budgets": [
+    {
+      "name": "Rent",
+      "spent": 980,
+      "limit": 1000,
+      "id": "a"
+    },
+    {
+      "name": "Groceries",
+      "spent": 420,
+      "limit": 350,
+      "id": "b"
+    },
+    {
+      "name": "Transport",
+      "spent": 180,
+      "limit": 200,
+      "id": "c"
+    },
+    {
+      "name": "Utilities",
+      "spent": 60,
+      "limit": 120,
+      "id": "d"
+    },
+    {
+      "name": "Entertainment",
+      "spent": 40,
+      "limit": 100,
+      "id": "e"
+    }
+
+  ],
   "$schema": "./node_modules/json-server/schema.json"
 }

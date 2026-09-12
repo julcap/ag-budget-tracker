@@ -1,5 +1,9 @@
 <nav>
   <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
   <a routerLink="/transactions" routerLinkActive="active">Transactions</a>
+  <a routerLink="/budgets" routerLinkActive="active">Budgets</a>
 </nav>
+@if (isAuthenticated()) {
+  <button (click)="logout()">Log out</button>
+}
 <router-outlet />
