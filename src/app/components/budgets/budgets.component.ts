@@ -23,6 +23,12 @@ export class BudgetsComponent {
 
   // Open the editor with the current limit.
   toggleEdit(id:string){
+    console.log('toggleEdit', this.editingId())
+    if (this.editingId()){
+      this.editingId.set(null)
+      this.draftLimit.set(0)
+      return
+    }
     this.editingId.set(id);
     this.draftLimit.set(this.budgets().find(b => b.id === id)?.limit ?? 0);
   }
