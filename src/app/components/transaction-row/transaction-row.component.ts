@@ -1,4 +1,4 @@
-import {Component, input} from '@angular/core';
+import {Component, input, output} from '@angular/core';
 import {Transaction} from "../../models/transaction";
 import {CurrencyPipe} from "@angular/common";
 
@@ -12,4 +12,5 @@ import {CurrencyPipe} from "@angular/common";
 
 export class TransactionRowComponent {
 transaction = input.required<Transaction>();
+  edit = output<string>();
 }

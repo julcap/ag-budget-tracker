@@ -6,7 +6,7 @@
 <p>Helo, {{ name }}</p>
 
 @for (t of filteredTransactions(); track t.id) {
-  <app-transaction-row [transaction]="t"></app-transaction-row>
+  <app-transaction-row [transaction]="t" (edit)="onEditRequested($event)"></app-transaction-row>
 }
 
 <app-transaction-form />

@@ -3,7 +3,7 @@ import {Transaction} from "../models/transaction";
 import {HttpClient} from "@angular/common/http";
 import {environment} from "../../environments/environment";
 
-@Injectable({  providedIn: 'root'})
+@Injectable({providedIn: 'root'})
 export class TransactionService {
   private http = inject(HttpClient);
   private _transactions = signal<Transaction[]>([])
@@ -12,7 +12,7 @@ export class TransactionService {
 
   constructor() {
     this.http.get<Transaction[]>(`${environment.apiUrl}/transactions`)
-      .subscribe(data=> this._transactions.set(data))
+      .subscribe(data => this._transactions.set(data))
   }
 
 
@@ -23,4 +23,9 @@ export class TransactionService {
       });
   }
 
+  // PATCH instead of PUT because it's a partial update
+  update(id: string, changes: Partial<Omit<Transaction, 'id'>>) {
+    this.http.patch<Transaction>(`${environment.apiUrl}/transactions/${id}`, changes)
+      .subscribe(updated => this._transactions.update(list => list.map(t => t.id === id ? updated : t)))
+  }
 }

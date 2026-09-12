@@ -5,6 +5,7 @@ import {LoginComponent} from "./pages/login/login.component";
 import {authGuard} from './guards/auth.guard';
 import {BudgetsComponent} from "./components/budgets/budgets.component";
 import {SettingsComponent} from "./components/settings/settings.component";
+import {TransactionFormComponent} from "./components/transaction-form/transaction-form.component";
 
 export const routes: Routes = [
   {path: '', redirectTo: 'dashboard', pathMatch: 'full'},
@@ -12,5 +13,6 @@ export const routes: Routes = [
   {path: 'dashboard', component: DashboardComponent, canActivate: [authGuard]},
   {path: 'transactions', component: TransactionsComponent, canActivate: [authGuard]},
   { path: 'budgets', component: BudgetsComponent, canActivate: [authGuard] },
-  { path: 'settings', component: SettingsComponent, canActivate: [authGuard] }
+  { path: 'settings', component: SettingsComponent, canActivate: [authGuard] },
+  { path: 'transactions/:id/edit', component: TransactionFormComponent, canActivate: [authGuard] },
 ];

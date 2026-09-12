@@ -1,3 +1,4 @@
+<h2>{{ editingId ? 'Edit transaction' : 'Add transaction' }}</h2>
 <form [formGroup]="form" (ngSubmit)="submit()">
   <input formControlName="merchant" placeholder="Merchant" />
   @if (form.controls.merchant.invalid && form.controls.merchant.touched) {
@@ -17,5 +18,5 @@
     <option>Utilities</option>
   </select>
 
-  <button type="submit">Add transaction</button>
+  <button type="submit">{{ editingId ? 'Save changes' : 'Add transaction' }}</button>
 </form>

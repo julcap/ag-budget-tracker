@@ -12,19 +12,19 @@
       "merchant": "WW Spotify",
       "category": "Entertainment",
       "date": "Sep 7",
-      "amount": -11.99
+      "amount": -99999
     },
     {
       "id": "3c",
       "merchant": "WW Acme Corp Payroll",
       "category": "Income",
       "date": "Sep 6",
-      "amount": 2100
+      "amount": -210
     },
     {
       "merchant": "e",
       "category": "Groceries",
-      "amount": -1,
+      "amount": -100,
       "date": "Today",
       "id": "eXWI5gh2Zso"
     },
@@ -34,6 +34,20 @@
       "amount": -2,
       "date": "Today",
       "id": "2n6Ow0aBOFE"
+    },
+    {
+      "merchant": "WW Foods Market",
+      "category": "Rent",
+      "amount": -90,
+      "date": "Today",
+      "id": "8MmUUHBCZf0"
+    },
+    {
+      "merchant": "e",
+      "category": "Groceries",
+      "amount": -10,
+      "date": "Today",
+      "id": "Em5sM8tN_mA"
     }
   ],
   "budgets": [
@@ -67,7 +81,6 @@
       "limit": 100,
       "id": "e"
     }
-
   ],
   "$schema": "./node_modules/json-server/schema.json"
 }
