@@ -49,7 +49,14 @@ export class BudgetsComponent {
   }
 
   protected statusLabel(b: any) {
-    return "";
+    switch (this.statusClass(b)) {
+      case 'over':
+        return 'Over budget';
+      case 'near':
+        return 'Near limit';
+      default:
+        return 'On track';
+    }
   }
 
   protected progressPct(b: any) {
