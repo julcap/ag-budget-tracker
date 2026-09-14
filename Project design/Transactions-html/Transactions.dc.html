@@ -1,0 +1,185 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        repeating-linear-gradient(0deg, transparent, transparent 23px, rgba(23,23,26,0.05) 24px),
+        repeating-linear-gradient(90deg, transparent, transparent 23px, rgba(23,23,26,0.05) 24px),
+        #f7f6f3;
+      color: #17171a;
+      --accent: oklch(58% 0.16 258); --ok: oklch(62% 0.13 150);
+      --line: #1c1c1f; --sub: #6b6f76; --card: #ffffff; --note: #a3785a;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    .devtag { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 9.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--note); background: #fbf3ea; border: 1px dashed #d8b898; border-radius: 4px; padding: 2px 7px; display: inline-block; }
+    .navlink { font-size: 14px; font-weight: 500; color: var(--sub); cursor: pointer; padding: 6px 2px; border-bottom: 2px solid transparent; }
+    .navlink.active { color: #17171a; border-bottom: 2px solid var(--accent); font-weight: 600; }
+    input { font-family: inherit; font-size: 13px; }
+    input::placeholder { color: #a3a6ab; }
+    th { cursor: pointer; user-select: none; }
+  </style>
+</helmet>
+<div style="width:1280px;height:880px;display:flex;flex-direction:column;">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:1.5px solid var(--line);background:#fff;">
+    <div style="display:flex;align-items:center;gap:36px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:26px;height:26px;border-radius:6px;background:var(--accent);display:flex;align-items:center;justify-content:center;">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><rect x="2" y="10" width="4" height="8" rx="1" fill="#fff"/><rect x="8" y="6" width="4" height="12" rx="1" fill="#fff"/><rect x="14" y="2" width="4" height="16" rx="1" fill="#fff"/></svg>
+        </div>
+        <span style="font-weight:700;font-size:16px;">Ledger</span>
+      </div>
+      <nav style="display:flex;gap:28px;">
+        <span class="navlink">Dashboard</span>
+        <span class="navlink active">Transactions</span>
+        <span class="navlink">Budgets</span>
+        <span class="navlink" style="display:flex;align-items:center;gap:4px;">Settings
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        </span>
+      </nav>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <button onClick="{{toggleHint}}" style="background:var(--accent);color:#fff;border:none;border-radius:6px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;">+ Add Transaction</button>
+      <div style="width:30px;height:30px;border-radius:50%;background:#e4e2dd;border:1.5px solid var(--line);"></div>
+    </div>
+  </div>
+
+  <div style="padding:24px 32px;overflow:auto;flex:1;">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:16px;">
+      <h1 style="font-size:20px;margin:0;">Transactions</h1>
+      <span class="devtag">Route: /transactions &middot; @for + computed() filter/sort</span>
+    </div>
+
+    <sc-if value="{{showHint}}" hint-placeholder-val="{{false}}">
+      <div style="background:#17171a;color:#fff;font-size:11.5px;padding:8px 12px;border-radius:6px;display:inline-block;margin-bottom:12px;">Opens the Transaction Form (bottom of canvas) &darr;</div>
+    </sc-if>
+
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+      <div style="position:relative;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--sub)" stroke-width="2" stroke-linecap="round" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input placeholder="Search merchant&hellip;" value="{{query}}" onInput="{{onQuery}}" style="padding:8px 12px 8px 30px;border:1.5px solid var(--line);border-radius:6px;width:220px;outline:none;"/>
+      </div>
+      <sc-for list="{{pills}}" as="p" hint-placeholder-count="6">
+        <button onClick="{{p.pick}}" style="padding:7px 13px;border-radius:16px;font-size:12.5px;font-weight:500;cursor:pointer;border:1.5px solid {{p.border}};background:{{p.bg}};color:{{p.color}};">{{p.label}}</button>
+      </sc-for>
+    </div>
+
+    <div style="background:var(--card);border:1.5px solid var(--line);border-radius:8px;overflow:hidden;">
+      <table style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr style="border-bottom:1.5px solid var(--line);">
+            <sc-for list="{{cols}}" as="c" hint-placeholder-count="4">
+              <th onClick="{{c.pick}}" style="text-align:{{c.align}};padding:11px 16px;font-size:11.5px;color:var(--sub);font-weight:600;letter-spacing:.03em;">{{c.label}} {{c.arrow}}</th>
+            </sc-for>
+          </tr>
+        </thead>
+        <tbody>
+          <sc-for list="{{rows}}" as="r" hint-placeholder-count="8">
+            <tr onClick="{{r.pick}}" style="border-bottom:1px solid #eceae4;cursor:pointer;background:{{r.bg}};">
+              <td style="padding:11px 16px;font-size:12.5px;color:var(--sub);">{{r.date}}</td>
+              <td style="padding:11px 16px;font-size:13px;font-weight:500;">{{r.merchant}}</td>
+              <td style="padding:11px 16px;">
+                <span style="font-size:11.5px;padding:3px 9px;border-radius:12px;background:#f1efe9;color:var(--sub);">{{r.category}}</span>
+              </td>
+              <td style="padding:11px 16px;text-align:right;font-size:13px;font-weight:600;color:{{r.amountColor}};">{{r.amount}}</td>
+            </tr>
+          </sc-for>
+        </tbody>
+      </table>
+      <sc-if value="{{empty}}" hint-placeholder-val="{{false}}">
+        <div style="padding:32px;text-align:center;color:var(--sub);font-size:13px;">No transactions match &ldquo;{{query}}&rdquo;</div>
+      </sc-if>
+    </div>
+    <div style="margin-top:10px;font-size:11.5px;color:var(--note);">Row click &rarr; opens Edit Transaction (Transaction Form) &middot; header click &rarr; sorts</div>
+  </div>
+</div>
+</x-dc>
+<script data-dc-script>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      showHint: false, query: '', catFilter: 'All', sortKey: 'date', sortAsc: false,
+      all: [
+        { id: 1, merchant: 'Whole Foods Market', category: 'Groceries', date: '2026-09-08', amount: -84.20 },
+        { id: 2, merchant: 'Spotify', category: 'Entertainment', date: '2026-09-07', amount: -11.99 },
+        { id: 3, merchant: 'Acme Corp Payroll', category: 'Income', date: '2026-09-06', amount: 2100.00 },
+        { id: 4, merchant: 'Shell Gas Station', category: 'Transport', date: '2026-09-05', amount: -52.30 },
+        { id: 5, merchant: 'Rent Payment', category: 'Rent', date: '2026-09-03', amount: -1450.00 },
+        { id: 6, merchant: 'Con Edison', category: 'Utilities', date: '2026-09-02', amount: -96.40 },
+        { id: 7, merchant: 'Netflix', category: 'Entertainment', date: '2026-09-01', amount: -15.49 },
+        { id: 8, merchant: "Trader Joe's", category: 'Groceries', date: '2026-08-30', amount: -61.15 }
+      ],
+      selected: null
+    };
+  }
+  renderVals() {
+    const s = this.state;
+    const cats = ['All', 'Groceries', 'Rent', 'Transport', 'Entertainment', 'Utilities', 'Income'];
+    const pills = cats.map(c => ({
+      label: c,
+      pick: () => this.setState({ catFilter: c }),
+      border: s.catFilter === c ? 'oklch(58% 0.16 258)' : '#d8d5cf',
+      bg: s.catFilter === c ? 'oklch(58% 0.16 258)' : '#fff',
+      color: s.catFilter === c ? '#fff' : '#17171a'
+    }));
+
+    let list = s.all.filter(t =>
+      (s.catFilter === 'All' || t.category === s.catFilter) &&
+      (!s.query || t.merchant.toLowerCase().includes(s.query.toLowerCase()))
+    );
+    const dir = s.sortAsc ? 1 : -1;
+    list = list.slice().sort((a, b) => {
+      if (s.sortKey === 'amount') return (a.amount - b.amount) * dir;
+      if (a[s.sortKey] < b[s.sortKey]) return -1 * dir;
+      if (a[s.sortKey] > b[s.sortKey]) return 1 * dir;
+      return 0;
+    });
+
+    const colDefs = [
+      { key: 'date', label: 'DATE', align: 'left' },
+      { key: 'merchant', label: 'MERCHANT', align: 'left' },
+      { key: 'category', label: 'CATEGORY', align: 'left' },
+      { key: 'amount', label: 'AMOUNT', align: 'right' }
+    ];
+    const cols = colDefs.map(c => ({
+      label: c.label, align: c.align,
+      arrow: s.sortKey === c.key ? (s.sortAsc ? '↑' : '↓') : '',
+      pick: () => this.setState({
+        sortKey: c.key,
+        sortAsc: this.state.sortKey === c.key ? !this.state.sortAsc : true
+      })
+    }));
+
+    const rows = list.map(t => ({
+      date: t.date, merchant: t.merchant, category: t.category,
+      amount: (t.amount < 0 ? '-$' : '+$') + Math.abs(t.amount).toFixed(2),
+      amountColor: t.amount < 0 ? '#17171a' : 'oklch(62% 0.13 150)',
+      bg: s.selected === t.id ? '#eef1fb' : '#fff',
+      pick: () => this.setState({ selected: this.state.selected === t.id ? null : t.id })
+    }));
+
+    return {
+      showHint: s.showHint,
+      toggleHint: () => this.setState({ showHint: !this.state.showHint }),
+      query: s.query,
+      onQuery: (e) => this.setState({ query: e.target.value }),
+      pills, cols, rows,
+      empty: rows.length === 0
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -11,8 +11,9 @@
       "id": "2b",
       "merchant": "WW Spotify",
       "category": "Entertainment",
-      "date": "Sep 7",
-      "amount": -99999
+      "date": "2026-09-14",
+      "amount": -99999,
+      "type": "expense"
     },
     {
       "id": "3c",
@@ -39,8 +40,9 @@
       "merchant": "WW Foods Market",
       "category": "Rent",
       "amount": -90,
-      "date": "Today",
-      "id": "8MmUUHBCZf0"
+      "date": "2026-09-16",
+      "id": "8MmUUHBCZf0",
+      "type": "expense"
     },
     {
       "merchant": "e",
@@ -48,6 +50,22 @@
       "amount": -10,
       "date": "Today",
       "id": "Em5sM8tN_mA"
+    },
+    {
+      "type": "expense",
+      "merchant": "WW Foods Market",
+      "category": "Groceries",
+      "amount": 1,
+      "date": "Today",
+      "id": "4_-CwX5SA3I"
+    },
+    {
+      "type": "expense",
+      "merchant": "WW Foods Market",
+      "category": "Groceries",
+      "amount": 1,
+      "date": "Today",
+      "id": "I34QipS4pxc"
     }
   ],
   "budgets": [

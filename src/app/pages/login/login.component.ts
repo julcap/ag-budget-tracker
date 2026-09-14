@@ -1,11 +1,12 @@
-import {Component, inject} from '@angular/core';
-import {AuthService} from "../../services/auth.service";
-import {Router} from "@angular/router";
+import { Component, inject, signal } from '@angular/core';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [],
+  imports: [ReactiveFormsModule],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
@@ -13,8 +14,34 @@ export class LoginComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
 
-  login() {
+  showPassword = signal(false);
+  signedIn = signal(false);
+
+  form = new FormGroup({
+    email: new FormControl('jordan@example.com', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.email]
+    }),
+    password: new FormControl('••••••••', {
+      nonNullable: true,
+      validators: [Validators.required]
+    })
+  });
+
+  toggleShowPassword() {
+    this.showPassword.update(v => !v);
+  }
+
+  submit() {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    this.signedIn.set(true);
     this.authService.login();
-    this.router.navigate(['/dashboard']);
+    setTimeout(() => {
+      this.router.navigate(['/dashboard']);
+    }, 600);
   }
 }

@@ -1,4 +1,12 @@
-<div (click)="edit.emit(transaction().id)" style="cursor: pointer;">
-  {{ transaction().date }} — {{ transaction().merchant }} ({{ transaction().category }}):
-  {{ transaction().amount | currency: 'DKK': 'symbol':'1.2-2':'da' }}
+<div class="transaction-item" (click)="edit.emit(transaction().id)">
+  <div class="transaction-main">
+    <div class="merchant-name">{{ transaction().merchant }}</div>
+    <div class="transaction-meta">
+      <span class="category-badge">{{ transaction().category }}</span>
+      <span class="date-text">{{ transaction().date }}</span>
+    </div>
+  </div>
+  <div class="amount-value" [class.income]="transaction().amount > 0 || transaction().type === 'income'">
+    {{ (transaction().amount > 0 || transaction().type === 'income' ? '+' : '-') }}${{ (Math.abs(transaction().amount)).toFixed(2) }}
+  </div>
 </div>

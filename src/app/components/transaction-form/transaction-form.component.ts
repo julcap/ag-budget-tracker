@@ -1,7 +1,7 @@
-import {Component, inject} from '@angular/core';
-import {FormControl, FormGroup, ReactiveFormsModule, Validators} from "@angular/forms";
-import {TransactionService} from "../../services/transaction.service";
-import {ActivatedRoute, Router} from "@angular/router";
+import { Component, effect, inject, input, OnInit, output } from '@angular/core';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
+import { TransactionService } from "../../services/transaction.service";
+import { ActivatedRoute } from "@angular/router";
 
 @Component({
   selector: 'app-transaction-form',
@@ -10,10 +10,14 @@ import {ActivatedRoute, Router} from "@angular/router";
   templateUrl: './transaction-form.component.html',
   styleUrl: './transaction-form.component.scss'
 })
-export class TransactionFormComponent {
+export class TransactionFormComponent implements OnInit {
   private route = inject(ActivatedRoute);
-  private router = inject(Router);
   private transactionService = inject(TransactionService);
+
+  transactionId = input<string | null>(null);
+  dialogVisible = input(false);
+  dialogClose = output<void>();
+
   editingId: string | null = null;
 
   form = new FormGroup({
@@ -23,33 +27,61 @@ export class TransactionFormComponent {
     category: new FormControl('Groceries', {nonNullable: true, validators: Validators.required}),
     date: new FormControl('Today', {nonNullable: true, validators: Validators.required}),
     notes: new FormControl('')
-  })
+  });
+
+  constructor() {
+    effect(() => {
+      const id = this.transactionId();
+      if (id) {
+        this.loadTransaction(id);
+      } else if (id === null && !this.route.snapshot?.paramMap?.get('id')) {
+        this.editingId = null;
+        this.resetForm();
+      }
+    }, { allowSignalWrites: true });
+  }
+
+  ngOnInit() {
+    const routeId = this.route.snapshot?.paramMap?.get('id');
+    if (routeId) {
+      this.loadTransaction(routeId);
+    }
+  }
+
+  loadTransaction(id: string) {
+    this.editingId = id;
+    const existing = this.transactionService.transactions().find(t => t.id === id);
+    if (existing) {
+      this.form.patchValue({
+        type: existing.type ?? 'expense',
+        merchant: existing.merchant,
+        amount: existing.amount,
+        category: existing.category,
+        date: existing.date,
+        notes: existing.notes ?? ''
+      });
+    }
+  }
+
+  resetForm() {
+    this.form.reset({
+      type: 'expense',
+      merchant: '',
+      amount: null,
+      category: 'Groceries',
+      date: 'Today',
+      notes: ''
+    });
+  }
 
   setType(type: 'expense' | 'income') {
     this.form.controls.type.setValue(type);
   }
 
-  ngOnInit() {
-    this.editingId = this.route.snapshot.paramMap.get('id');
-    if (this.editingId){
-      const existing  = this.transactionService.transactions().find(t => t.id === this.editingId)
-      if (existing){
-        this.form.patchValue({
-          type: existing.type ?? 'expense',
-          merchant: existing.merchant,
-          amount: existing.amount,
-          category: existing.category,
-          date: existing.date,
-          notes: existing.notes ?? ''
-        })
-      }
-    }
-  }
-
   cancel() {
     this.editingId = null;
-    this.form.reset({type: 'expense', merchant: '', amount: null, category: 'Groceries', date: 'Today', notes: ''});
-    this.router.navigate(['/transactions']);
+    this.resetForm();
+    this.dialogClose.emit();
   }
 
   submit() {
@@ -71,10 +103,10 @@ export class TransactionFormComponent {
 
     if (this.editingId) {
       this.transactionService.update(this.editingId, payload);
-      this.router.navigate(['/transactions']);
     } else {
       this.transactionService.add(payload);
-      this.form.reset({type: 'expense', merchant: '', amount: null, category: 'Groceries', date: 'Today', notes: ''});
     }
+    this.resetForm();
+    this.dialogClose.emit();
   }
 }

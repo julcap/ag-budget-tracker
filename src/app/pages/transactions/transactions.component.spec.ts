@@ -1,6 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
 import { TransactionsComponent } from './transactions.component';
+import { provideHttpClient } from '@angular/common/http';
+import { provideRouter } from '@angular/router';
+import { TransactionService } from '../../services/transaction.service';
 
 describe('TransactionsComponent', () => {
   let component: TransactionsComponent;
@@ -8,10 +10,13 @@ describe('TransactionsComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TransactionsComponent]
-    })
-    .compileComponents();
-    
+      imports: [TransactionsComponent],
+      providers: [
+        provideHttpClient(),
+        provideRouter([])
+      ]
+    }).compileComponents();
+
     fixture = TestBed.createComponent(TransactionsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -19,5 +24,38 @@ describe('TransactionsComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should filter transactions by search query', () => {
+    component.query.set('market');
+    expect(component.query()).toBe('market');
+  });
+
+  it('should filter transactions by category', () => {
+    component.setCategory('Groceries');
+    expect(component.activeCategory()).toBe('Groceries');
+  });
+
+  it('should toggle sort field and direction', () => {
+    component.toggleSort('amount');
+    expect(component.sortField()).toBe('amount');
+    expect(component.sortDirection()).toBe('asc');
+
+    component.toggleSort('amount');
+    expect(component.sortDirection()).toBe('desc');
+  });
+
+  it('should open and close modal dialog', () => {
+    component.onAddRequested();
+    expect(component.dialogVisible()).toBeTrue();
+    expect(component.editingTransactionId()).toBeNull();
+
+    component.onEditRequested('tx-123');
+    expect(component.dialogVisible()).toBeTrue();
+    expect(component.editingTransactionId()).toBe('tx-123');
+
+    component.closeDialog();
+    expect(component.dialogVisible()).toBeFalse();
+    expect(component.editingTransactionId()).toBeNull();
   });
 });

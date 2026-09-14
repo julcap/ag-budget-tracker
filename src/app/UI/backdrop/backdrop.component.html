@@ -1,0 +1,7 @@
+@if (isOpen()) {
+  <div class="modal-backdrop" (click)="onBackdropClick()">
+    <div class="modal-container" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <ng-content />
+    </div>
+  </div>
+}

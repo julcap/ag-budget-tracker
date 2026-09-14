@@ -1,34 +1,78 @@
-<section class="page">
-  <div class="page-header"><h1>Settings</h1></div>
-
-  <div class="settings-card">
-    <div class="settings-title">Profile</div>
-    <div class="settings-row">
-      <label>Name</label>
-      <input value="Jordan Avery" />
-    </div>
-    <div class="settings-row">
-      <label>Email</label>
-      <input value="jordan@example.com" />
+<div class="page settings-page">
+  <div class="page-header">
+    <div class="title-row">
+      <h1>Settings</h1>
+      <span class="devtag">Route: /settings, canActivate: [authGuard]</span>
     </div>
   </div>
 
   <div class="settings-card">
-    <div class="settings-title">Preferences</div>
+    <h2 class="settings-title">Profile</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="profileName">Name</label>
+        <input id="profileName" type="text" [(ngModel)]="userName" />
+      </div>
+      <div class="form-group">
+        <label for="profileEmail">Email</label>
+        <input id="profileEmail" type="email" [(ngModel)]="userEmail" />
+      </div>
+    </div>
+  </div>
+
+  <div class="settings-card">
+    <h2 class="settings-title">Preferences</h2>
+    
     <div class="settings-row">
-      <span>Theme</span>
-      <button
-        type="button"
-        class="theme-toggle"
-        role="switch"
-        aria-label="Dark mode"
-        [attr.aria-checked]="theme() === 'dark'"
-        [class.is-dark]="theme() === 'dark'"
-        (click)="toggleTheme()"
-      >
-        <span class="theme-option" aria-hidden="true">Light</span>
-        <span class="theme-option" aria-hidden="true">Dark</span>
+      <div class="setting-info">
+        <span class="setting-label">Currency</span>
+      </div>
+      <select [(ngModel)]="selectedCurrency" class="currency-select">
+        <option value="USD">USD ($)</option>
+        <option value="EUR">EUR (€)</option>
+        <option value="DKK">DKK (kr)</option>
+      </select>
+    </div>
+
+    <div class="settings-row">
+      <div class="setting-info">
+        <span class="setting-label">Theme</span>
+      </div>
+      <div class="theme-control">
+        <button
+          type="button"
+          class="theme-toggle"
+          role="switch"
+          aria-label="Toggle theme"
+          [attr.aria-checked]="theme() === 'dark'"
+          [class.is-dark]="theme() === 'dark'"
+          (click)="toggleTheme()"
+        >
+          <span class="theme-option" aria-hidden="true">Light</span>
+          <span class="theme-option" aria-hidden="true">Dark</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="settings-card">
+    <h2 class="settings-title">Security</h2>
+    <div class="settings-row no-border">
+      <button type="button" class="btn btn-secondary">
+        Change password
       </button>
     </div>
   </div>
-</section>
+
+  <div class="settings-card danger-zone">
+    <h2 class="settings-title danger-title">Danger zone</h2>
+    <div class="danger-content">
+      <p class="danger-description">
+        Deleting your account removes all transactions and budgets.
+      </p>
+      <button type="button" class="btn btn-danger-outline" (click)="deleteAccount()">
+        Delete account
+      </button>
+    </div>
+  </div>
+</div>

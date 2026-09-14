@@ -208,9 +208,8 @@ describe('TransactionFormComponent', () => {
     });
   });
 
-  it('should reset form and navigate to transactions on cancel', () => {
-    const router = TestBed.inject(Router);
-    spyOn(router, 'navigate');
+  it('should reset form and emit dialogClose on cancel', () => {
+    spyOn(component.dialogClose, 'emit');
 
     component.editingId = 'tx-123';
     component.form.patchValue({
@@ -229,7 +228,7 @@ describe('TransactionFormComponent', () => {
       date: 'Today',
       notes: ''
     });
-    expect(router.navigate).toHaveBeenCalledWith(['/transactions']);
+    expect(component.dialogClose.emit).toHaveBeenCalled();
   });
 
   it('should call cancel when clicking Cancel button or close icon', () => {
@@ -244,5 +243,20 @@ describe('TransactionFormComponent', () => {
     closeBtn?.click();
 
     expect(component.cancel).toHaveBeenCalledTimes(2);
+  });
+
+  it('should emit dialogClose on successful submit', () => {
+    spyOn(component.dialogClose, 'emit');
+
+    component.form.setValue({
+      type: 'expense',
+      merchant: 'Groceries Store',
+      amount: 45,
+      category: 'Groceries',
+      date: 'Today',
+      notes: ''
+    });
+    component.submit();
+    expect(component.dialogClose.emit).toHaveBeenCalled();
   });
 });

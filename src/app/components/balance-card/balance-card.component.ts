@@ -10,5 +10,4 @@ import {Component, input} from '@angular/core';
 export class BalanceCardComponent {
   label =input.required<string>()
   value =input.required<string>()
-
 }

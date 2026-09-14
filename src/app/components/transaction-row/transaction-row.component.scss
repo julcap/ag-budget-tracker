@@ -1,0 +1,60 @@
+.transaction-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: background 0.12s ease;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.02);
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  .transaction-main {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    .merchant-name {
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--color-text);
+    }
+
+    .transaction-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .category-badge {
+        font-size: 11px;
+        font-weight: 500;
+        padding: 1px 6px;
+        background: var(--color-bg);
+        border: 1px solid var(--color-border);
+        border-radius: 4px;
+        color: var(--color-text);
+      }
+
+      .date-text {
+        font-size: 11.5px;
+        color: var(--color-text-muted);
+      }
+    }
+  }
+
+  .amount-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text);
+
+    &.income {
+      color: var(--color-ok);
+    }
+  }
+}

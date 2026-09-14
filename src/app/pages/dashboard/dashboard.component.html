@@ -1,9 +1,29 @@
-<h1>Ledger</h1>
-<app-balance-card label="Balance" value="$2,450.00"/>
-<app-balance-card label="Income this month" value="$4,200.00"/>
-<app-balance-card label="Spent this month" value="$1,750.00"/>
-<h3>Recent transactions</h3>
-@for (t of transactions(); track t.id) {
-  <app-transaction-row
-    [transaction]="t"/>
-}
+<div class="page dashboard-page">
+  <div class="page-header">
+    <div class="title-row">
+      <h1>Dashboard</h1>
+      <span class="devtag">Route: /dashboard</span>
+    </div>
+  </div>
+
+  <div class="cards-grid">
+    <app-balance-card label="Total Balance" [value]="balance()"/>
+    <app-balance-card label="Income this month" [value]="incomeThisMonth()"/>
+    <app-balance-card label="Spent this month" [value]="spentThisMonth()"/>
+  </div>
+
+  <div class="recent-section">
+    <div class="section-header">
+      <h2>Recent transactions</h2>
+      <a routerLink="/transactions" class="view-all-link">View all →</a>
+    </div>
+
+    <div class="transactions-list">
+      @for (t of recentTransactions(); track t.id) {
+        <app-transaction-row [transaction]="t" />
+      } @empty {
+        <div class="empty-state">No transactions yet</div>
+      }
+    </div>
+  </div>
+</div>

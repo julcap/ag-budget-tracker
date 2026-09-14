@@ -1,0 +1,76 @@
+.dashboard-page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+.page-header {
+  margin-bottom: 24px;
+
+  .title-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--color-text);
+    }
+  }
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.recent-section {
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--color-border);
+
+    h2 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--color-text);
+    }
+
+    .view-all-link {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-accent);
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  .transactions-list {
+    display: flex;
+    flex-direction: column;
+
+    .empty-state {
+      padding: 32px;
+      text-align: center;
+      color: var(--color-text-muted);
+      font-size: 13px;
+    }
+  }
+}

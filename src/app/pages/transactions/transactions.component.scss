@@ -1,0 +1,208 @@
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+
+  .title-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--color-text);
+    }
+  }
+
+  .add-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+}
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+
+  .search-wrapper {
+    position: relative;
+    width: 240px;
+
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--color-text-muted);
+      pointer-events: none;
+    }
+
+    input {
+      width: 100%;
+      padding-left: 32px;
+      padding-top: 7px;
+      padding-bottom: 7px;
+      font-size: 13px;
+    }
+  }
+
+  .category-pills {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+
+    .pill-btn {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      color: var(--color-text);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 5px 11px;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+
+      &:hover:not(.active) {
+        background: var(--color-bg);
+      }
+
+      &.active {
+        background: var(--color-accent);
+        border-color: var(--color-accent);
+        color: #fff;
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+.table-container {
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.transactions-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+
+  th {
+    padding: 12px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-surface);
+    user-select: none;
+
+    &.sortable {
+      cursor: pointer;
+
+      &:hover {
+        color: var(--color-text);
+      }
+    }
+
+    .sort-indicator {
+      display: inline-block;
+      margin-left: 4px;
+      font-weight: bold;
+      color: var(--color-accent);
+    }
+  }
+
+  td {
+    padding: 14px 16px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text);
+  }
+
+  .transaction-row {
+    cursor: pointer;
+    transition: background 0.12s ease;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.02);
+    }
+
+    &:last-child td {
+      border-bottom: none;
+    }
+  }
+
+  .date-cell {
+    color: var(--color-text-muted);
+    font-size: 12.5px;
+    white-space: nowrap;
+    width: 140px;
+  }
+
+  .merchant-cell {
+    font-weight: 500;
+  }
+
+  .category-cell {
+    width: 140px;
+  }
+
+  .category-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 500;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    color: var(--color-text);
+  }
+
+  .amount-cell {
+    font-weight: 600;
+    font-size: 13.5px;
+    white-space: nowrap;
+    width: 120px;
+
+    &.income {
+      color: var(--color-ok);
+    }
+  }
+
+  .text-right {
+    text-align: right;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 36px;
+    color: var(--color-text-muted);
+    font-size: 13px;
+  }
+}
+
+.table-hint {
+  padding: 8px 16px;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  background: var(--color-bg);
+  border-top: 1px solid var(--color-border);
+}

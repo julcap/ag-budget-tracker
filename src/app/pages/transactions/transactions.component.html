@@ -1,12 +1,113 @@
-<h1>Transactions</h1>
+<div class="page">
+  <div class="page-header">
+    <div>
+      <div class="title-row">
+        <h1>Transactions</h1>
+        <span class="devtag">Route: /transactions · &#64;for + computed() filter/sort</span>
+      </div>
+    </div>
+    <button type="button" class="btn btn-primary add-btn" (click)="onAddRequested()">
+      + Add transaction
+    </button>
+  </div>
 
-<input type="text" placeholder="Search merchant…" (input)="handleSearch($event)"/>
+  <div class="filter-bar">
+    <div class="search-wrapper">
+      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input
+        type="text"
+        placeholder="Search merchant…"
+        [value]="query()"
+        (input)="handleSearch($event)"
+      />
+    </div>
 
-<input [(ngModel)]="name" />
-<p>Helo, {{ name }}</p>
+    <div class="category-pills">
+      @for (cat of categories; track cat) {
+        <button
+          type="button"
+          class="pill-btn"
+          [class.active]="activeCategory() === cat"
+          (click)="setCategory(cat)"
+        >
+          {{ cat }}
+        </button>
+      }
+    </div>
+  </div>
 
-@for (t of filteredTransactions(); track t.id) {
-  <app-transaction-row [transaction]="t" (edit)="onEditRequested($event)"></app-transaction-row>
-}
+  <div class="table-container">
+    <table class="transactions-table">
+      <thead>
+        <tr>
+          <th (click)="toggleSort('date')" class="sortable">
+            DATE
+            <span class="sort-indicator">
+              @if (sortField() === 'date') {
+                {{ sortDirection() === 'asc' ? '↑' : '↓' }}
+              }
+            </span>
+          </th>
+          <th (click)="toggleSort('merchant')" class="sortable">
+            MERCHANT
+            <span class="sort-indicator">
+              @if (sortField() === 'merchant') {
+                {{ sortDirection() === 'asc' ? '↑' : '↓' }}
+              }
+            </span>
+          </th>
+          <th (click)="toggleSort('category')" class="sortable">
+            CATEGORY
+            <span class="sort-indicator">
+              @if (sortField() === 'category') {
+                {{ sortDirection() === 'asc' ? '↑' : '↓' }}
+              }
+            </span>
+          </th>
+          <th (click)="toggleSort('amount')" class="sortable text-right">
+            AMOUNT
+            <span class="sort-indicator">
+              @if (sortField() === 'amount') {
+                {{ sortDirection() === 'asc' ? '↑' : '↓' }}
+              }
+            </span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (t of filteredTransactions(); track t.id) {
+          <tr class="transaction-row" (click)="onEditRequested(t.id)">
+            <td class="date-cell">{{ t.date }}</td>
+            <td class="merchant-cell">{{ t.merchant }}</td>
+            <td class="category-cell">
+              <span class="category-badge">{{ t.category }}</span>
+            </td>
+            <td class="amount-cell text-right" [class.income]="t.amount > 0 || t.type === 'income'">
+              {{ formatAmount(t.amount, t.type) }}
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4" class="empty-state">
+              No transactions match "{{ query() }}"
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <div class="table-hint">
+      Row click → opens Edit Transaction (Transaction Form) · header click → sorts
+    </div>
+  </div>
+</div>
 
-<app-transaction-form />
+<app-backdrop [isOpen]="dialogVisible()" (close)="closeDialog()">
+  <app-transaction-form
+    [transactionId]="editingTransactionId()"
+    (dialogClose)="closeDialog()"
+  />
+</app-backdrop>
+
