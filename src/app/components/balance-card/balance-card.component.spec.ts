@@ -26,4 +26,12 @@ describe('BalanceCardComponent', () => {
     expect(el.querySelector('.card-label')?.textContent).toContain('Total Balance');
     expect(el.querySelector('.card-value')?.textContent).toContain('$2,450.00');
   });
+
+  it('should render trend icon when trend is up', () => {
+    fixture.componentRef.setInput('trend', 'up');
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.trend-icon')).toBeTruthy();
+    expect(el.querySelector('.card-value')?.classList.contains('color-ok')).toBeTrue();
+  });
 });

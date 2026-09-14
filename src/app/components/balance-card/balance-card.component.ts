@@ -1,4 +1,4 @@
-import {Component, input} from '@angular/core';
+import { Component, input } from '@angular/core';
 
 @Component({
   selector: 'app-balance-card',
@@ -8,6 +8,8 @@ import {Component, input} from '@angular/core';
   styleUrl: './balance-card.component.scss'
 })
 export class BalanceCardComponent {
-  label =input.required<string>()
-  value =input.required<string>()
+  label = input.required<string>();
+  value = input.required<string>();
+  trend = input<'up' | 'down' | null>(null);
+  valueColor = input<string | null>(null);
 }
