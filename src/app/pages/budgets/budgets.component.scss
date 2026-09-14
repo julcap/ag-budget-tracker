@@ -31,3 +31,30 @@
 
 .edit-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
 .edit-input { width: 70px; padding: 5px 8px; border: 1px solid var(--color-border); border-radius: 5px; }
+
+.page-header { margin-bottom: 24px; }
+.page-header h1 { font-size: 24px; margin-bottom: 8px; }
+.page-header p { color: var(--color-text-muted); }
+.budget-card { min-height: 120px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; }
+.budget-name { margin: 0; }
+.budget-card-header { gap: 16px; flex-wrap: wrap; }
+.status-unset, .status-unlimited { color: var(--color-text-muted); background: var(--color-bg); }
+.progress-track { background: var(--color-bg); }
+.edit-row { flex-wrap: wrap; }
+.edit-input { width: 110px; background: var(--color-bg); color: var(--color-text); }
+.budget-hero {
+  grid-column: 1 / -1;
+  min-height: 240px;
+  padding: 36px 40px;
+  .budget-name { font-size: 28px; }
+  .budget-meta { font-size: 24px; margin-top: 12px; }
+  .status-badge { font-size: 18px; padding: 8px 16px; border-radius: 20px; }
+  .icon-btn { font-size: 24px; width: 44px; height: 44px; }
+  .progress-track { height: 16px; border-radius: 8px; margin-top: 24px; }
+  .progress-fill { border-radius: 8px; }
+}
+@media (max-width: 640px) {
+  .budget-grid { grid-template-columns: 1fr; }
+  .budget-hero { padding: 24px; }
+  .budget-hero .budget-meta { font-size: 20px; }
+}

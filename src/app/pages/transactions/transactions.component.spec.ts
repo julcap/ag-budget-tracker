@@ -3,7 +3,7 @@ import { TransactionsComponent } from './transactions.component';
 import { provideHttpClient } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import { TransactionService } from '../../services/transaction.service';
-import { ALL_CATEGORIES } from '../../models/category';
+import { CategoryService } from '../../services/category.service';
 
 describe('TransactionsComponent', () => {
   let component: TransactionsComponent;
@@ -28,7 +28,13 @@ describe('TransactionsComponent', () => {
   });
 
   it('should have global categories available in category filter list', () => {
-    expect(component.categories).toEqual(['All', ...ALL_CATEGORIES]);
+    const categories = TestBed.inject(CategoryService);
+    expect(component.categories).toEqual(['All', ...categories.allCategories()]);
+    categories.add('expense', 'Healthcare');
+    expect(component.categories).toContain('Healthcare');
+    categories.remove('expense', 'Healthcare');
+    expect(component.categories).not.toContain('Healthcare');
+    expect(component.categories).toContain('Uncategorized');
   });
 
   it('should filter transactions by search query', () => {

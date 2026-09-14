@@ -1,0 +1,46 @@
+<section class="page">
+  <div class="page-header">
+    <h1>Budgets</h1>
+  </div>
+  @if (loadError()) {
+    <p role="alert">{{ loadError() }}</p>
+  }
+  @if (error()) {
+    <p role="alert">{{ error() }}</p>
+  }
+  <div class="budget-grid">
+    @for (b of cards(); track b.id) {
+      <article class="budget-card" [class.budget-hero]="b.id === 'global'" [attr.aria-label]="b.name + ' budget'">
+        <div class="budget-card-header">
+          <div>
+            <h2 class="budget-name">{{ b.name }}</h2>
+            <div class="budget-meta"><strong>{{ b.spent | currency }}</strong> of @if (isUnlimited(b)) { <span aria-label="Unlimited">∞</span> } @else { {{ b.limit | currency }} } budget</div>
+          </div>
+          <div class="budget-actions">
+            <span class="status-badge status-{{ statusClass(b) }}">{{ statusLabel(b) }}</span>
+            <button class="icon-btn" (click)="toggleEdit(b.id)" [disabled]="!loaded() || saving()"
+                    [attr.aria-label]="'Edit ' + b.name + ' budget'">✎
+            </button>
+          </div>
+        </div>
+        <div class="progress-track" role="progressbar" [attr.aria-label]="b.name + ' budget used'" aria-valuemin="0"
+             aria-valuemax="100" [attr.aria-valuenow]="progressPct(b)"
+             [attr.aria-valuetext]="(b.spent | currency) + (isUnlimited(b) ? ' spent, unlimited budget' : ' spent of ' + (b.limit | currency))">
+          <div class="progress-fill fill-{{ statusClass(b) }}" [style.width.%]="progressPct(b)"></div>
+        </div>
+        @if (editingId() === b.id) {
+          @if (b.id !== 'global') { <p class="budget-meta">Use 0 for an unlimited budget.</p> }
+          <div class="edit-row">
+            <label [for]="'limit-' + b.id">Monthly budget $</label>
+            <input class="edit-input" [id]="'limit-' + b.id" type="number" min="0" step="0.01" [value]="draftLimit()"
+                   (input)="onDraftInput($event)" [disabled]="saving()" (keydown.enter)="saveLimit(b.id)"/>
+            <button class="btn btn-primary" (click)="saveLimit(b.id)"
+                    [disabled]="!validLimit() || saving()">{{ saving() ? 'Saving…' : 'Save' }}
+            </button>
+            <button class="btn btn-ghost" (click)="toggleEdit(b.id)" [disabled]="saving()">Cancel</button>
+          </div>
+        }
+      </article>
+    }
+  </div>
+</section>

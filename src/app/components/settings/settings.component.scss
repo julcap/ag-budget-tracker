@@ -63,16 +63,60 @@
     padding-top: 0;
   }
 
+  .setting-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
   .setting-label {
     font-size: 13.5px;
     font-weight: 500;
     color: var(--color-text);
   }
 
+  .setting-hint {
+    font-size: 11.5px;
+    color: var(--color-text-muted);
+  }
+
   .currency-select {
     min-width: 120px;
     padding: 6px 10px;
     font-size: 13px;
+  }
+
+  .threshold-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 90px;
+
+    .threshold-input {
+      width: 100%;
+      padding: 6px 24px 6px 10px;
+      font-size: 13px;
+      font-weight: 600;
+      text-align: right;
+      border: 1.5px solid var(--color-border);
+      border-radius: 6px;
+      background: var(--color-bg);
+      color: var(--color-text);
+      outline: none;
+
+      &:focus {
+        border-color: var(--color-accent);
+      }
+    }
+
+    .input-suffix {
+      position: absolute;
+      right: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      pointer-events: none;
+    }
   }
 }
 
@@ -151,3 +195,9 @@
     color: #fff;
   }
 }
+
+.category-hint { color: var(--color-text-muted); font-size: 12px; }
+.category-add { display: flex; align-items: flex-end; gap: 12px; margin: 16px 0; flex-wrap: wrap; }
+.category-name-field { display: grid; gap: 6px; flex: 1; }
+.category-row { gap: 12px; overflow-wrap: anywhere; }
+.category-error { color: var(--color-danger); }

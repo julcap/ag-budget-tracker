@@ -1,13 +1,25 @@
 <div class="balance-card">
   <div class="card-label">{{ label() }}</div>
   <div class="card-value-wrapper">
-    <div class="card-value" [class.color-ok]="valueColor() === 'ok' || trend() === 'up'">
+    <div 
+      class="card-value" 
+      [class.color-ok]="valueColor() === 'ok' || trend() === 'up'"
+      [class.color-danger]="valueColor() === 'danger' || valueColor() === 'red'"
+      [class.color-warn]="valueColor() === 'warn' || valueColor() === 'orange'"
+    >
       {{ value() }}
     </div>
     @if (trend() === 'up') {
       <svg class="trend-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M23 6l-9.5 9.5-5-5L1 18"></path>
         <path d="M17 6h6v6"></path>
+      </svg>
+    }
+    @if (warning()) {
+      <svg class="warning-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+        <line x1="12" y1="9" x2="12" y2="13"></line>
+        <line x1="12" y1="17" x2="12.01" y2="17"></line>
       </svg>
     }
   </div>

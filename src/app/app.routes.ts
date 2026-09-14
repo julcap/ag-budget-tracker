@@ -3,7 +3,7 @@ import {DashboardComponent} from "./pages/dashboard/dashboard.component";
 import {TransactionsComponent} from "./pages/transactions/transactions.component";
 import {LoginComponent} from "./pages/login/login.component";
 import {authGuard} from './guards/auth.guard';
-import {BudgetsComponent} from "./components/budgets/budgets.component";
+import {BudgetsComponent} from "./pages/budgets/budgets.component";
 import {SettingsComponent} from "./components/settings/settings.component";
 import {TransactionFormComponent} from "./components/transaction-form/transaction-form.component";
 

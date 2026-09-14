@@ -3,12 +3,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from "@angula
 import { TransactionService } from "../../services/transaction.service";
 import { CategoryService } from "../../services/category.service";
 import { ActivatedRoute } from "@angular/router";
-import {
-  DEFAULT_EXPENSE_CATEGORY,
-  DEFAULT_INCOME_CATEGORY,
-  EXPENSE_CATEGORIES,
-  INCOME_CATEGORIES
-} from "../../models/category";
+
 
 @Component({
   selector: 'app-transaction-form',
@@ -28,8 +23,8 @@ export class TransactionFormComponent implements OnInit {
 
   editingId: string | null = null;
 
-  expenseCategories = EXPENSE_CATEGORIES;
-  incomeCategories = INCOME_CATEGORIES;
+  get expenseCategories() { return this.categoryService.expenseCategories(); }
+  get incomeCategories() { return this.categoryService.incomeCategories(); }
 
   get categories(): readonly string[] {
     return this.categoryService.getCategories(this.form.controls.type.value);
@@ -39,7 +34,7 @@ export class TransactionFormComponent implements OnInit {
     type: new FormControl<'expense' | 'income'>('expense', {nonNullable: true, validators: Validators.required}),
     merchant: new FormControl('', {nonNullable: true, validators: Validators.required}),
     amount: new FormControl<number | null>(null, [Validators.required]),
-    category: new FormControl<string>(DEFAULT_EXPENSE_CATEGORY, {nonNullable: true, validators: Validators.required}),
+    category: new FormControl<string>(this.categoryService.getDefaultCategory('expense'), {nonNullable: true, validators: Validators.required}),
     date: new FormControl('Today', {nonNullable: true, validators: Validators.required}),
     notes: new FormControl('')
   });
@@ -84,7 +79,7 @@ export class TransactionFormComponent implements OnInit {
       type: 'expense',
       merchant: '',
       amount: null,
-      category: DEFAULT_EXPENSE_CATEGORY,
+      category: this.categoryService.getDefaultCategory('expense'),
       date: 'Today',
       notes: ''
     });

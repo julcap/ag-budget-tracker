@@ -34,4 +34,33 @@ describe('BalanceCardComponent', () => {
     expect(el.querySelector('.trend-icon')).toBeTruthy();
     expect(el.querySelector('.card-value')?.classList.contains('color-ok')).toBeTrue();
   });
+
+  it('should apply red color when valueColor is red or danger', () => {
+    fixture.componentRef.setInput('valueColor', 'red');
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.card-value')?.classList.contains('color-danger')).toBeTrue();
+
+    fixture.componentRef.setInput('valueColor', 'danger');
+    fixture.detectChanges();
+    expect(el.querySelector('.card-value')?.classList.contains('color-danger')).toBeTrue();
+  });
+
+  it('should apply orange color when valueColor is orange or warn', () => {
+    fixture.componentRef.setInput('valueColor', 'orange');
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.card-value')?.classList.contains('color-warn')).toBeTrue();
+
+    fixture.componentRef.setInput('valueColor', 'warn');
+    fixture.detectChanges();
+    expect(el.querySelector('.card-value')?.classList.contains('color-warn')).toBeTrue();
+  });
+
+  it('should render warning icon when warning is true', () => {
+    fixture.componentRef.setInput('warning', true);
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.warning-icon')).toBeTruthy();
+  });
 });

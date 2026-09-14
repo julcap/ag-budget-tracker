@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { BalanceCardComponent } from "../../components/balance-card/balance-card.component";
 import { TransactionService } from "../../services/transaction.service";
+import { SettingsService } from "../../services/settings.service";
 import { RouterLink } from '@angular/router';
 
 export interface CategorySpendingItem {
@@ -20,35 +21,85 @@ export interface CategorySpendingItem {
 })
 export class DashboardComponent {
   private transactionService = inject(TransactionService);
+  private settingsService = inject(SettingsService);
   transactions = this.transactionService.transactions;
   Math = Math;
 
   activeCategory = signal<string | null>(null);
   selectedTxId = signal<string | null>(null);
 
-  balance = computed(() => {
+  balanceValue = computed(() => {
     const list = this.transactions();
-    if (list.length === 0) return '$2,450.00';
-    const total = list.reduce((sum, t) => sum + t.amount, 0);
-    return this.formatCurrency(total);
+    if (list.length === 0) return 2450.00;
+    return list.reduce((sum, t) => sum + t.amount, 0);
+  });
+
+  isBalanceNegative = computed(() => {
+    return this.balanceValue() < 0;
+  });
+
+  balance = computed(() => {
+    const val = this.balanceValue();
+    const prefix = val < 0 ? '-$' : '$';
+    return `${prefix}${Math.abs(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  });
+
+  incomeThisMonthValue = computed(() => {
+    const list = this.transactions();
+    if (list.length === 0) return 4200.00;
+    return list
+      .filter(t => t.amount > 0 || t.type === 'income')
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
   });
 
   incomeThisMonth = computed(() => {
+    return this.formatCurrency(this.incomeThisMonthValue());
+  });
+
+  spentThisMonthValue = computed(() => {
     const list = this.transactions();
-    if (list.length === 0) return '$4,200.00';
-    const total = list
-      .filter(t => t.amount > 0 || t.type === 'income')
+    if (list.length === 0) return 1750.00;
+    return list
+      .filter(t => t.amount < 0 || t.type === 'expense')
       .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-    return this.formatCurrency(total);
   });
 
   spentThisMonth = computed(() => {
-    const list = this.transactions();
-    if (list.length === 0) return '$1,750.00';
-    const total = list
-      .filter(t => t.amount < 0 || t.type === 'expense')
-      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-    return this.formatCurrency(total);
+    return this.formatCurrency(this.spentThisMonthValue());
+  });
+
+  spentRatio = computed(() => {
+    const income = this.incomeThisMonthValue();
+    const spent = this.spentThisMonthValue();
+    if (income <= 0) {
+      return spent > 0 ? 1.01 : 0;
+    }
+    return spent / income;
+  });
+
+  isSpentDanger = computed(() => {
+    const dangerRatio = this.settingsService.spendingDangerPercent() / 100;
+    return this.spentRatio() > dangerRatio;
+  });
+
+  isSpentWarning = computed(() => {
+    const warningRatio = this.settingsService.spendingWarningPercent() / 100;
+    return this.spentRatio() > warningRatio;
+  });
+
+  isSpentWarningIcon = computed(() => {
+    const iconRatio = this.settingsService.spendingWarningIconPercent() / 100;
+    return this.spentRatio() >= iconRatio;
+  });
+
+  spentValueColor = computed<'red' | 'orange' | null>(() => {
+    if (this.isSpentDanger()) {
+      return 'red';
+    }
+    if (this.isSpentWarning()) {
+      return 'orange';
+    }
+    return null;
   });
 
   categorySpending = computed<CategorySpendingItem[]>(() => {

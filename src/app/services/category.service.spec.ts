@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { CategoryService } from './category.service';
+import { CategoryService, UNCATEGORIZED } from './category.service';
 import {
   ALL_CATEGORIES,
   DEFAULT_EXPENSE_CATEGORY,
@@ -12,8 +12,21 @@ describe('CategoryService', () => {
   let service: CategoryService;
 
   beforeEach(() => {
+    localStorage.removeItem('budget_categories');
     TestBed.configureTestingModule({});
     service = TestBed.inject(CategoryService);
+  });
+
+  afterEach(() => localStorage.removeItem('budget_categories'));
+
+  it('persists additions, rejects duplicates, and protects Uncategorized', () => {
+    expect(service.add('expense', ' Healthcare ')).toBeTrue();
+    expect(service.add('expense', 'healthcare')).toBeFalse();
+    expect(new CategoryService().isExpense('Healthcare')).toBeTrue();
+    service.remove('expense', 'Healthcare');
+    service.remove('expense', UNCATEGORIZED);
+    expect(service.isExpense('Healthcare')).toBeFalse();
+    expect(service.isExpense(UNCATEGORIZED)).toBeTrue();
   });
 
   it('should be created', () => {
@@ -21,14 +34,14 @@ describe('CategoryService', () => {
   });
 
   it('should expose expense, income and all categories as signals', () => {
-    expect(service.expenseCategories()).toEqual(EXPENSE_CATEGORIES);
-    expect(service.incomeCategories()).toEqual(INCOME_CATEGORIES);
-    expect(service.allCategories()).toEqual(ALL_CATEGORIES);
+    expect(service.expenseCategories()).toEqual([...EXPENSE_CATEGORIES, UNCATEGORIZED]);
+    expect(service.incomeCategories()).toEqual([...INCOME_CATEGORIES, UNCATEGORIZED]);
+    expect([...service.allCategories()].sort()).toEqual([...ALL_CATEGORIES, UNCATEGORIZED].sort());
   });
 
   it('should return appropriate categories for type', () => {
-    expect(service.getCategories('expense')).toEqual(EXPENSE_CATEGORIES);
-    expect(service.getCategories('income')).toEqual(INCOME_CATEGORIES);
+    expect(service.getCategories('expense')).toEqual([...EXPENSE_CATEGORIES, UNCATEGORIZED]);
+    expect(service.getCategories('income')).toEqual([...INCOME_CATEGORIES, UNCATEGORIZED]);
   });
 
   it('should return default category for type', () => {

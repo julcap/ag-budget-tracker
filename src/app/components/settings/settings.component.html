@@ -2,8 +2,35 @@
   <div class="page-header">
     <div class="title-row">
       <h1>Settings</h1>
-      <span class="devtag">Route: /settings, canActivate: [authGuard]</span>
+      <!--<span class="devtag">Route: /settings, canActivate: [authGuard]</span>-->
     </div>
+  </div>
+
+  <div class="settings-card">
+    <h2 class="settings-title">Categories</h2>
+    <p class="category-hint">Categories are shared across transactions and budgets. Deleting one moves its transactions to Uncategorized.</p>
+    <label for="categoryType">Category type</label>
+    <select id="categoryType" [(ngModel)]="categoryType" [disabled]="deletingCategory !== null">
+      <option value="expense">Expense</option>
+      <option value="income">Income</option>
+    </select>
+    <form class="category-add" (ngSubmit)="addCategory()">
+      <label class="category-name-field" for="categoryName">New category
+        <input id="categoryName" name="categoryName" [(ngModel)]="categoryName" maxlength="60" placeholder="e.g. Healthcare" />
+      </label>
+      <button class="btn btn-primary" type="submit" [disabled]="!categoryName.trim() || deletingCategory !== null">Add category</button>
+    </form>
+    @if (categoryError) { <p class="category-error" role="alert">{{ categoryError }}</p> }
+    @for (category of categories.getCategories(categoryType); track category) {
+      <div class="settings-row category-row">
+        <span>{{ category }}</span>
+        @if (category !== uncategorized) {
+          <button class="btn btn-ghost" type="button" [disabled]="deletingCategory !== null" (click)="deleteCategory(category)" [attr.aria-label]="'Delete ' + category">
+            {{ deletingCategory === category ? 'Moving transactions…' : 'Delete' }}
+          </button>
+        } @else { <span class="category-hint">Default · cannot be deleted</span> }
+      </div>
+    }
   </div>
 
   <div class="settings-card">
@@ -22,7 +49,7 @@
 
   <div class="settings-card">
     <h2 class="settings-title">Preferences</h2>
-    
+
     <div class="settings-row">
       <div class="setting-info">
         <span class="setting-label">Currency</span>
@@ -51,6 +78,67 @@
           <span class="theme-option" aria-hidden="true">Light</span>
           <span class="theme-option" aria-hidden="true">Dark</span>
         </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="settings-card">
+    <h2 class="settings-title">Spending Alerts</h2>
+
+    <div class="settings-row">
+      <div class="setting-info">
+        <span class="setting-label">Warning threshold (orange text)</span>
+        <span class="setting-hint">Spent % of income to highlight spent amount in orange</span>
+      </div>
+      <div class="threshold-input-wrapper">
+        <input
+          id="warningPercent"
+          type="number"
+          min="0"
+          max="1000"
+          [ngModel]="spendingWarningPercent()"
+          (ngModelChange)="setWarningPercent($event)"
+          class="threshold-input"
+        />
+        <span class="input-suffix">%</span>
+      </div>
+    </div>
+
+    <div class="settings-row">
+      <div class="setting-info">
+        <span class="setting-label">Alert threshold (warning icon)</span>
+        <span class="setting-hint">Spent % of income to display warning alert icon</span>
+      </div>
+      <div class="threshold-input-wrapper">
+        <input
+          id="warningIconPercent"
+          type="number"
+          min="0"
+          max="1000"
+          [ngModel]="spendingWarningIconPercent()"
+          (ngModelChange)="setWarningIconPercent($event)"
+          class="threshold-input"
+        />
+        <span class="input-suffix">%</span>
+      </div>
+    </div>
+
+    <div class="settings-row no-border">
+      <div class="setting-info">
+        <span class="setting-label">Danger threshold (red text)</span>
+        <span class="setting-hint">Spent % of income to highlight spent amount in red (default 100%)</span>
+      </div>
+      <div class="threshold-input-wrapper">
+        <input
+          id="dangerPercent"
+          type="number"
+          min="0"
+          max="1000"
+          [ngModel]="spendingDangerPercent()"
+          (ngModelChange)="setDangerPercent($event)"
+          class="threshold-input"
+        />
+        <span class="input-suffix">%</span>
       </div>
     </div>
   </div>

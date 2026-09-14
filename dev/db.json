@@ -5,7 +5,8 @@
       "merchant": "WW Foods Market",
       "category": "Groceries",
       "date": "Sep 8",
-      "amount": -84.2
+      "amount": -100,
+      "type": "expense"
     },
     {
       "id": "2b",
@@ -75,6 +76,62 @@
       "date": "2026-09-11",
       "notes": "Income due to wt wtwtwt t          tojaosidfjoi. oijoasdij ojsad oij ojsdf oisajd oisjd of sjdof odsf oidsjf oijsa o ijsoadoasdf josaidfjoisafoaisjfo isjdaof ijsaodf ijsadof isoadfijoisfd oisdfj oias dojsaf",
       "id": "RGclpWEovfs"
+    },
+    {
+      "type": "income",
+      "merchant": "Company",
+      "category": "Salary",
+      "amount": 900,
+      "date": "2026-09-14",
+      "id": "jEgRGgbex0E"
+    },
+    {
+      "type": "expense",
+      "merchant": "WW Foods Market",
+      "category": "Groceries",
+      "amount": -100,
+      "date": "2026-09-03",
+      "id": "a_67wJsdhH4"
+    },
+    {
+      "type": "expense",
+      "merchant": "WW Foods Market",
+      "category": "Groceries",
+      "amount": -100,
+      "date": "2026-09-08",
+      "id": "hsGdSOt4vWE"
+    },
+    {
+      "type": "expense",
+      "merchant": "test",
+      "category": "Entertainment",
+      "amount": -200,
+      "date": "2026-09-16",
+      "id": "RJJewbgHD8s"
+    },
+    {
+      "type": "expense",
+      "merchant": "WW Spotify",
+      "category": "Transport",
+      "amount": -100,
+      "date": "2026-09-08",
+      "id": "R7v251WEA_o"
+    },
+    {
+      "type": "expense",
+      "merchant": "WW Spotify",
+      "category": "Utilities",
+      "amount": -100,
+      "date": "Today",
+      "id": "BiRqkAikq4E"
+    },
+    {
+      "type": "expense",
+      "merchant": "WW Spotify",
+      "category": "Other",
+      "amount": -100,
+      "date": "Today",
+      "id": "JZuDjoCB2Pg"
     }
   ],
   "budgets": [
@@ -107,6 +164,24 @@
       "spent": 40,
       "limit": 100,
       "id": "e"
+    },
+    {
+      "id": "NX8ofkS_sgw",
+      "name": "Total expenses",
+      "limit": 900,
+      "spent": 1414
+    },
+    {
+      "id": "5MZUZdUZj-c",
+      "name": "Total expenses",
+      "limit": 1000,
+      "spent": 1414
+    },
+    {
+      "id": "vEItK5fSrKc",
+      "name": "Total expenses",
+      "limit": 2000,
+      "spent": 1414
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"

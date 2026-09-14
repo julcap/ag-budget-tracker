@@ -2,14 +2,27 @@
   <div class="page-header">
     <div class="title-row">
       <h1>Dashboard</h1>
-      <span class="devtag">Route: /dashboard &middot; OnPush + signals</span>
+   <!--   <span class="devtag">Route: /dashboard &middot; OnPush + signals</span>-->
     </div>
   </div>
 
   <div class="cards-grid">
-    <app-balance-card label="BALANCE" [value]="balance()"/>
-    <app-balance-card label="INCOME THIS MONTH" [value]="incomeThisMonth()" [trend]="'up'"/>
-    <app-balance-card label="SPENT THIS MONTH" [value]="spentThisMonth()"/>
+    <app-balance-card
+      label="BALANCE"
+      [value]="balance()"
+      [valueColor]="isBalanceNegative() ? 'red' : null"
+    />
+    <app-balance-card
+      label="INCOME THIS MONTH"
+      [value]="incomeThisMonth()"
+      [trend]="'up'"
+    />
+    <app-balance-card
+      label="SPENT THIS MONTH"
+      [value]="spentThisMonth()"
+      [valueColor]="spentValueColor()"
+      [warning]="isSpentWarningIcon()"
+    />
   </div>
 
   <div class="dashboard-grid">
@@ -24,8 +37,8 @@
           <div class="category-bar-row" (click)="toggleCategory(cat.name)">
             <div class="category-name">{{ cat.name }}</div>
             <div class="progress-track">
-              <div 
-                class="progress-fill" 
+              <div
+                class="progress-fill"
                 [style.width.%]="cat.pct"
                 [class.active]="activeCategory() === cat.name"
               ></div>
@@ -46,9 +59,9 @@
       <div class="recent-list">
         @for (t of recentTransactions(); track t.id) {
           <div class="recent-item-container">
-            <div 
-              class="recent-item" 
-              (click)="toggleSelectedTx(t.id)" 
+            <div
+              class="recent-item"
+              (click)="toggleSelectedTx(t.id)"
               [class.selected]="selectedTxId() === t.id"
             >
               <div class="recent-item-main">

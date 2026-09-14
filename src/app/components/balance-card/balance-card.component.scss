@@ -29,9 +29,23 @@
     &.color-ok {
       color: var(--color-ok);
     }
+
+    &.color-danger,
+    &.color-red {
+      color: var(--color-danger);
+    }
+
+    &.color-warn,
+    &.color-orange {
+      color: var(--color-warn);
+    }
   }
 
   .trend-icon {
     color: var(--color-ok);
+  }
+
+  .warning-icon {
+    color: var(--color-warn);
   }
 }

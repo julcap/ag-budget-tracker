@@ -12,4 +12,5 @@ export class BalanceCardComponent {
   value = input.required<string>();
   trend = input<'up' | 'down' | null>(null);
   valueColor = input<string | null>(null);
+  warning = input<boolean>(false);
 }
