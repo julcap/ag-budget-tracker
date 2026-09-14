@@ -1,7 +1,14 @@
 import { Component, effect, inject, input, OnInit, output } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
 import { TransactionService } from "../../services/transaction.service";
+import { CategoryService } from "../../services/category.service";
 import { ActivatedRoute } from "@angular/router";
+import {
+  DEFAULT_EXPENSE_CATEGORY,
+  DEFAULT_INCOME_CATEGORY,
+  EXPENSE_CATEGORIES,
+  INCOME_CATEGORIES
+} from "../../models/category";
 
 @Component({
   selector: 'app-transaction-form',
@@ -13,6 +20,7 @@ import { ActivatedRoute } from "@angular/router";
 export class TransactionFormComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private transactionService = inject(TransactionService);
+  private categoryService = inject(CategoryService);
 
   transactionId = input<string | null>(null);
   dialogVisible = input(false);
@@ -20,11 +28,18 @@ export class TransactionFormComponent implements OnInit {
 
   editingId: string | null = null;
 
+  expenseCategories = EXPENSE_CATEGORIES;
+  incomeCategories = INCOME_CATEGORIES;
+
+  get categories(): readonly string[] {
+    return this.categoryService.getCategories(this.form.controls.type.value);
+  }
+
   form = new FormGroup({
     type: new FormControl<'expense' | 'income'>('expense', {nonNullable: true, validators: Validators.required}),
     merchant: new FormControl('', {nonNullable: true, validators: Validators.required}),
     amount: new FormControl<number | null>(null, [Validators.required]),
-    category: new FormControl('Groceries', {nonNullable: true, validators: Validators.required}),
+    category: new FormControl<string>(DEFAULT_EXPENSE_CATEGORY, {nonNullable: true, validators: Validators.required}),
     date: new FormControl('Today', {nonNullable: true, validators: Validators.required}),
     notes: new FormControl('')
   });
@@ -52,10 +67,11 @@ export class TransactionFormComponent implements OnInit {
     this.editingId = id;
     const existing = this.transactionService.transactions().find(t => t.id === id);
     if (existing) {
+      const type = existing.type ?? (existing.amount < 0 ? 'expense' : 'income');
       this.form.patchValue({
-        type: existing.type ?? 'expense',
+        type,
         merchant: existing.merchant,
-        amount: existing.amount,
+        amount: Math.abs(existing.amount),
         category: existing.category,
         date: existing.date,
         notes: existing.notes ?? ''
@@ -68,7 +84,7 @@ export class TransactionFormComponent implements OnInit {
       type: 'expense',
       merchant: '',
       amount: null,
-      category: 'Groceries',
+      category: DEFAULT_EXPENSE_CATEGORY,
       date: 'Today',
       notes: ''
     });
@@ -76,6 +92,11 @@ export class TransactionFormComponent implements OnInit {
 
   setType(type: 'expense' | 'income') {
     this.form.controls.type.setValue(type);
+    const currentCategory = this.form.controls.category.value;
+    const availableCategories = this.categoryService.getCategories(type);
+    if (!availableCategories.includes(currentCategory)) {
+      this.form.controls.category.setValue(this.categoryService.getDefaultCategory(type));
+    }
   }
 
   cancel() {
@@ -90,13 +111,14 @@ export class TransactionFormComponent implements OnInit {
       return;
     }
     const {type, merchant, amount, category, date, notes} = this.form.getRawValue();
-    const roundedAmount = Math.round(amount! * 100) / 100;
+    const roundedAmount = Math.round(Math.abs(amount!) * 100) / 100;
+    const finalAmount = type === 'expense' ? -roundedAmount : roundedAmount;
 
     const payload = {
       type,
       merchant,
       category,
-      amount: roundedAmount,
+      amount: finalAmount,
       date,
       ...(notes ? { notes } : {})
     };

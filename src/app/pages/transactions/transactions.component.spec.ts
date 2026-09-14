@@ -3,6 +3,7 @@ import { TransactionsComponent } from './transactions.component';
 import { provideHttpClient } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import { TransactionService } from '../../services/transaction.service';
+import { ALL_CATEGORIES } from '../../models/category';
 
 describe('TransactionsComponent', () => {
   let component: TransactionsComponent;
@@ -24,6 +25,10 @@ describe('TransactionsComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should have global categories available in category filter list', () => {
+    expect(component.categories).toEqual(['All', ...ALL_CATEGORIES]);
   });
 
   it('should filter transactions by search query', () => {

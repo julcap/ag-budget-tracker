@@ -60,7 +60,7 @@ describe('TransactionFormComponent', () => {
     });
   });
 
-  it('should round amount to 2 decimal places', () => {
+  it('should round amount to 2 decimal places and submit negative for expense', () => {
     component.form.setValue({
       type: 'expense',
       merchant: 'Gas Station',
@@ -76,13 +76,12 @@ describe('TransactionFormComponent', () => {
       type: 'expense',
       merchant: 'Gas Station',
       category: 'Transport',
-      amount: 42.57,
+      amount: -42.57,
       date: 'Today'
     });
   });
 
-
-  it('should submit positive amount when adding a transaction', () => {
+  it('should submit negative amount when adding an expense transaction with positive input', () => {
     component.form.setValue({
       type: 'expense',
       merchant: 'Supermarket',
@@ -98,7 +97,7 @@ describe('TransactionFormComponent', () => {
       type: 'expense',
       merchant: 'Supermarket',
       category: 'Groceries',
-      amount: 42.5,
+      amount: -42.5,
       date: 'Sep 10'
     });
   });
@@ -119,13 +118,13 @@ describe('TransactionFormComponent', () => {
       type: 'expense',
       merchant: 'Supermarket',
       category: 'Groceries',
-      amount: 42.5,
+      amount: -42.5,
       date: '2026-09-09',
       notes: 'Weekly grocery run'
     });
   });
 
-  it('should submit positive amount when editing a transaction', () => {
+  it('should submit negative amount when editing an expense transaction', () => {
     component.editingId = 'tx-1';
     component.form.setValue({
       type: 'expense',
@@ -142,7 +141,7 @@ describe('TransactionFormComponent', () => {
       type: 'expense',
       merchant: 'Coffee Shop',
       category: 'Entertainment',
-      amount: 15,
+      amount: -15,
       date: 'Sep 8',
       notes: 'Meeting with Alex'
     });
@@ -171,7 +170,7 @@ describe('TransactionFormComponent', () => {
     expect(component.form.controls.type.value).toBe('expense');
   });
 
-  it('should update type when clicking income button', () => {
+  it('should update type and categories when clicking income button', () => {
     const buttons: HTMLButtonElement[] = fixture.nativeElement.querySelectorAll('.type-selector button');
     expect(buttons.length).toBe(2);
     expect(buttons[0].textContent?.trim()).toBe('Expense');
@@ -179,16 +178,38 @@ describe('TransactionFormComponent', () => {
 
     expect(buttons[0].classList.contains('active')).toBeTrue();
     expect(buttons[1].classList.contains('active')).toBeFalse();
+    expect(component.categories).toEqual(component.expenseCategories);
 
     buttons[1].click();
     fixture.detectChanges();
 
     expect(component.form.controls.type.value).toBe('income');
+    expect(component.categories).toEqual(component.incomeCategories);
+    expect(component.form.controls.category.value).toBe('Salary');
     expect(buttons[0].classList.contains('active')).toBeFalse();
     expect(buttons[1].classList.contains('active')).toBeTrue();
   });
 
-  it('should submit transaction with type income when selected', () => {
+  it('should switch categories back to expense and default to Groceries when clicking Expense', () => {
+    component.setType('income');
+    expect(component.form.controls.category.value).toBe('Salary');
+    expect(component.categories).toEqual(component.incomeCategories);
+
+    component.setType('expense');
+    expect(component.form.controls.category.value).toBe('Groceries');
+    expect(component.categories).toEqual(component.expenseCategories);
+  });
+
+  it('should preserve category if valid in both types', () => {
+    component.form.controls.category.setValue('Other');
+    component.setType('income');
+    expect(component.form.controls.category.value).toBe('Other');
+
+    component.setType('expense');
+    expect(component.form.controls.category.value).toBe('Other');
+  });
+
+  it('should submit transaction with positive amount when type income is selected', () => {
     component.setType('income');
     component.form.patchValue({
       merchant: 'Paycheck',
@@ -205,6 +226,29 @@ describe('TransactionFormComponent', () => {
       category: 'Salary',
       amount: 3500,
       date: '2026-09-01'
+    });
+  });
+
+  it('should submit positive amount when editing an income transaction', () => {
+    component.editingId = 'tx-income-1';
+    component.form.setValue({
+      type: 'income',
+      merchant: 'Freelance Client',
+      amount: 750,
+      category: 'Freelance',
+      date: 'Sep 12',
+      notes: 'Website design'
+    });
+
+    component.submit();
+
+    expect(transactionServiceMock.update).toHaveBeenCalledWith('tx-income-1', {
+      type: 'income',
+      merchant: 'Freelance Client',
+      category: 'Freelance',
+      amount: 750,
+      date: 'Sep 12',
+      notes: 'Website design'
     });
   });
 

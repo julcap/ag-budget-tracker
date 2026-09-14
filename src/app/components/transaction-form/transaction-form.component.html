@@ -46,11 +46,9 @@
       <div class="form-group">
         <label for="category">Category</label>
         <select id="category" formControlName="category">
-          <option>Groceries</option>
-          <option>Rent</option>
-          <option>Transport</option>
-          <option>Entertainment</option>
-          <option>Utilities</option>
+          @for (cat of categories; track cat) {
+            <option [value]="cat">{{ cat }}</option>
+          }
         </select>
       </div>
 

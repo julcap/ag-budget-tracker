@@ -12,7 +12,7 @@
       "merchant": "WW Spotify",
       "category": "Entertainment",
       "date": "2026-09-14",
-      "amount": -99999,
+      "amount": -200,
       "type": "expense"
     },
     {
@@ -66,6 +66,15 @@
       "amount": 1,
       "date": "Today",
       "id": "I34QipS4pxc"
+    },
+    {
+      "type": "income",
+      "merchant": "WW Foods Market",
+      "category": "Groceries",
+      "amount": 100,
+      "date": "2026-09-11",
+      "notes": "Income due to wt wtwtwt t          tojaosidfjoi. oijoasdij ojsad oij ojsdf oisajd oisjd of sjdof odsf oidsjf oijsa o ijsoadoasdf josaidfjoisafoaisjfo isjdaof ijsaodf ijsadof isoadfijoisfd oisdfj oias dojsaf",
+      "id": "RGclpWEovfs"
     }
   ],
   "budgets": [

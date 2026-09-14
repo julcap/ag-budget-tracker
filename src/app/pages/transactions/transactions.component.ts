@@ -2,9 +2,11 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TransactionService } from '../../services/transaction.service';
+import { CategoryService } from '../../services/category.service';
 import { TransactionFormComponent } from '../../components/transaction-form/transaction-form.component';
 import { BackdropComponent } from '../../UI/backdrop/backdrop.component';
 import { Transaction } from '../../models/transaction';
+import { ALL_CATEGORIES } from '../../models/category';
 
 type SortField = 'date' | 'merchant' | 'category' | 'amount';
 type SortDirection = 'asc' | 'desc';
@@ -24,9 +26,10 @@ type SortDirection = 'asc' | 'desc';
 })
 export class TransactionsComponent {
   private transactionsService = inject(TransactionService);
+  private categoryService = inject(CategoryService);
   transactions = this.transactionsService.transactions;
 
-  categories = ['All', 'Groceries', 'Rent', 'Transport', 'Entertainment', 'Utilities', 'Income'];
+  categories = ['All', ...ALL_CATEGORIES];
   activeCategory = signal<string>('All');
   query = signal<string>('');
   sortField = signal<SortField>('date');

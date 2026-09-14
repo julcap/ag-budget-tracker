@@ -1,0 +1,182 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        repeating-linear-gradient(0deg, transparent, transparent 23px, rgba(23,23,26,0.05) 24px),
+        repeating-linear-gradient(90deg, transparent, transparent 23px, rgba(23,23,26,0.05) 24px),
+        #f7f6f3;
+      color: #17171a;
+      --accent: oklch(58% 0.16 258); --danger: oklch(56% 0.19 25); --ok: oklch(62% 0.13 150);
+      --line: #1c1c1f; --sub: #6b6f76; --card: #ffffff; --note: #a3785a;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    .devtag { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 9.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--note); background: #fbf3ea; border: 1px dashed #d8b898; border-radius: 4px; padding: 2px 7px; display: inline-block; }
+    .navlink { font-size: 14px; font-weight: 500; color: var(--sub); cursor: pointer; padding: 6px 2px; border-bottom: 2px solid transparent; }
+    .navlink.active { color: #17171a; border-bottom: 2px solid var(--accent); font-weight: 600; }
+  </style>
+</helmet>
+<div style="width:1280px;height:880px;display:flex;flex-direction:column;">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:1.5px solid var(--line);background:#fff;">
+    <div style="display:flex;align-items:center;gap:36px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:26px;height:26px;border-radius:6px;background:var(--accent);display:flex;align-items:center;justify-content:center;">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><rect x="2" y="10" width="4" height="8" rx="1" fill="#fff"></rect><rect x="8" y="6" width="4" height="12" rx="1" fill="#fff"></rect><rect x="14" y="2" width="4" height="16" rx="1" fill="#fff"></rect></svg>
+        </div>
+        <span style="font-weight:700;font-size:16px;">Ledger</span>
+      </div>
+      <nav style="display:flex;gap:28px;">
+        <span class="navlink active">Dashboard</span>
+        <span class="navlink">Transactions</span>
+        <span class="navlink">Budgets</span>
+        <span class="navlink" style="display:flex;align-items:center;gap:4px;">Settings
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+        </span>
+      </nav>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;position:relative;">
+      <button onClick="{{toggleHint}}" style="background:var(--accent);color:#fff;border:none;border-radius:6px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;">+ Add Transaction</button>
+      <sc-if value="{{showHint}}" hint-placeholder-val="{{false}}">
+        <div style="position:absolute;top:44px;right:0;background:#17171a;color:#fff;font-size:11.5px;padding:8px 12px;border-radius:6px;width:190px;z-index:5;">Opens the Transaction Form (bottom of canvas) ↓</div>
+      </sc-if>
+      <div style="width:30px;height:30px;border-radius:50%;background:#e4e2dd;border:1.5px solid var(--line);"></div>
+    </div>
+  </div>
+
+  <div style="padding:28px 32px;overflow:auto;flex:1;">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:20px;">
+      <h1 style="font-size:20px;margin:0;">Dashboard</h1>
+      <span class="devtag">Route: /dashboard · OnPush + signals</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3, minmax(0,1fr));gap:16px;margin-bottom:24px;">
+      <div style="background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:18px 20px;">
+        <div style="font-size:12px;color:var(--sub);font-weight:600;">BALANCE</div>
+        <div style="font-size:26px;font-weight:700;margin-top:6px;">$2,450.00</div>
+      </div>
+      <div style="background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:18px 20px;">
+        <div style="font-size:12px;color:var(--sub);font-weight:600;">INCOME THIS MONTH</div>
+        <div style="display:flex;align-items:baseline;gap:8px;margin-top:6px;">
+          <div style="font-size:26px;font-weight:700;color:var(--ok);">$4,200.00</div>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 6l-9.5 9.5-5-5L1 18"></path><path d="M17 6h6v6"></path></svg>
+        </div>
+      </div>
+      <div style="background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:18px 20px;">
+        <div style="font-size:12px;color:var(--sub);font-weight:600;">SPENT THIS MONTH</div>
+        <div style="font-size:26px;font-weight:700;margin-top:6px;">$1,750.00</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:16px;">
+      <div style="background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <div style="font-weight:600;font-size:14px;">Spending by category</div>
+          <span class="devtag">computed() over signal&lt;Txn[]&gt;</span>
+        </div>
+        <div style="font-size:12px;color:var(--sub);margin-bottom:14px;min-height:16px;">{{activeCategoryDetail}}</div>
+        <sc-for list="{{categories}}" as="cat" hint-placeholder-count="5">
+          <div onClick="{{cat.pick}}" style="display:flex;align-items:center;gap:10px;margin-bottom:10px;cursor:pointer;">
+            <div style="width:88px;font-size:12.5px;color:var(--sub);">{{cat.name}}</div>
+            <div style="flex:1;height:16px;background:#efeee9;border-radius:3px;overflow:hidden;">
+              <div style="height:100%;border-radius:3px;width:{{cat.pct}}%;background:{{cat.color}};"></div>
+            </div>
+            <div style="width:64px;text-align:right;font-size:12.5px;font-weight:600;">{{cat.amount}}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div style="font-weight:600;font-size:14px;">Recent transactions</div>
+          <a href="#" style="font-size:12px;">View all →</a>
+        </div>
+        <sc-for list="{{txns}}" as="t" hint-placeholder-count="5">
+          <div>
+            <div onClick="{{t.pick}}" style="display:flex;align-items:center;justify-content:space-between;padding:9px 8px;border-radius:6px;cursor:pointer;background:{{t.bg}};">
+              <div>
+                <div style="font-size:13px;font-weight:500;">{{t.merchant}}</div>
+                <div style="font-size:11.5px;color:var(--sub);margin-top:2px;">{{t.date}} · {{t.category}}</div>
+              </div>
+              <div style="font-size:13px;font-weight:600;color:{{t.amountColor}};">{{t.amount}}</div>
+            </div>
+            <sc-if value="{{t.selected}}" hint-placeholder-val="{{false}}">
+              <div style="font-size:11px;color:var(--note);padding:0 8px 8px;">→ opens Edit Transaction (Transaction Form)</div>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script data-dc-script>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      showHint: false,
+      activeCategory: null,
+      selectedTx: null,
+      cats: [
+        { key: 'rent', name: 'Rent', amount: 980, color: 'oklch(58% 0.16 258)' },
+        { key: 'groceries', name: 'Groceries', amount: 420, color: 'oklch(58% 0.16 258)' },
+        { key: 'transport', name: 'Transport', amount: 180, color: 'oklch(58% 0.16 258)' },
+        { key: 'utilities', name: 'Utilities', amount: 96, color: 'oklch(58% 0.16 258)' },
+        { key: 'entertainment', name: 'Entertainment', amount: 74, color: 'oklch(58% 0.16 258)' }
+      ]
+    };
+  }
+  renderVals() {
+    const s = this.state;
+    const total = s.cats.reduce((a, c) => a + c.amount, 0);
+    const max = Math.max(...s.cats.map(c => c.amount));
+    const categories = s.cats.map(c => ({
+      name: c.name,
+      amount: '$' + c.amount.toLocaleString(),
+      pct: Math.round((c.amount / max) * 100),
+      color: s.activeCategory === c.key ? 'oklch(58% 0.16 258)' : '#c9c6bf',
+      pick: () => this.setState({ activeCategory: this.state.activeCategory === c.key ? null : c.key })
+    }));
+    const active = s.cats.find(c => c.key === s.activeCategory);
+    const activeCategoryDetail = active
+      ? active.name + ': $' + active.amount.toLocaleString() + ' · ' + Math.round((active.amount / total) * 100) + '% of spending this month'
+      : 'Click a category to see its share of spending';
+
+    const rawTxns = [
+      { id: 1, merchant: 'Whole Foods Market', category: 'Groceries', date: 'Sep 8', amount: -84.20 },
+      { id: 2, merchant: 'Spotify', category: 'Entertainment', date: 'Sep 7', amount: -11.99 },
+      { id: 3, merchant: 'Acme Corp Payroll', category: 'Income', date: 'Sep 6', amount: 2100.00 },
+      { id: 4, merchant: 'Shell Gas Station', category: 'Transport', date: 'Sep 5', amount: -52.30 },
+      { id: 5, merchant: 'Rent Payment', category: 'Rent', date: 'Sep 3', amount: -1450.00 }
+    ];
+    const txns = rawTxns.map(t => ({
+      merchant: t.merchant, category: t.category, date: t.date,
+      amount: (t.amount < 0 ? '-$' : '+$') + Math.abs(t.amount).toFixed(2),
+      amountColor: t.amount < 0 ? '#17171a' : 'oklch(62% 0.13 150)',
+      selected: s.selectedTx === t.id,
+      bg: s.selectedTx === t.id ? '#eef1fb' : 'transparent',
+      pick: () => this.setState({ selectedTx: this.state.selectedTx === t.id ? null : t.id })
+    }));
+
+    return {
+      showHint: s.showHint,
+      toggleHint: () => this.setState({ showHint: !this.state.showHint }),
+      categories, activeCategoryDetail, txns
+    };
+  }
+}
+</script>
+</body>
+</html>
