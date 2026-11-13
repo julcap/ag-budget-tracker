@@ -35,25 +35,17 @@ describe('BalanceCardComponent', () => {
     expect(el.querySelector('.card-value')?.classList.contains('color-ok')).toBeTrue();
   });
 
-  it('should apply red color when valueColor is red or danger', () => {
-    fixture.componentRef.setInput('valueColor', 'red');
-    fixture.detectChanges();
-    const el = fixture.nativeElement as HTMLElement;
-    expect(el.querySelector('.card-value')?.classList.contains('color-danger')).toBeTrue();
-
+  it('should apply danger color', () => {
     fixture.componentRef.setInput('valueColor', 'danger');
     fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('.card-value')?.classList.contains('color-danger')).toBeTrue();
   });
 
-  it('should apply orange color when valueColor is orange or warn', () => {
-    fixture.componentRef.setInput('valueColor', 'orange');
-    fixture.detectChanges();
-    const el = fixture.nativeElement as HTMLElement;
-    expect(el.querySelector('.card-value')?.classList.contains('color-warn')).toBeTrue();
-
+  it('should apply warn color', () => {
     fixture.componentRef.setInput('valueColor', 'warn');
     fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('.card-value')?.classList.contains('color-warn')).toBeTrue();
   });
 

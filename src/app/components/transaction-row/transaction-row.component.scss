@@ -2,28 +2,40 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 20px;
-  border-bottom: 1px solid var(--color-border);
+  gap: 12px;
+  width: 100%;
+  padding: 10px 8px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  color: inherit;
   cursor: pointer;
   transition: background 0.12s ease;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.02);
+    background: var(--color-bg);
   }
 
-  &:last-child {
-    border-bottom: none;
+  &:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: -2px;
   }
 
   .transaction-main {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    min-width: 0;
 
     .merchant-name {
       font-size: 13.5px;
       font-weight: 500;
       color: var(--color-text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .transaction-meta {
@@ -52,6 +64,8 @@
     font-size: 14px;
     font-weight: 600;
     color: var(--color-text);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
 
     &.income {
       color: var(--color-ok);

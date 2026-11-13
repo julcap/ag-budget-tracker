@@ -1,11 +1,11 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { CurrencyPipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { BudgetService } from '../../services/budget.service';
 import { Budget } from '../../models/budget';
+import { MoneyPipe } from '../../pipes/money.pipe';
+import { formatMonth } from '../../utils/date';
 
 @Component({
-  selector: 'app-budgets', standalone: true, imports: [CurrencyPipe, RouterLink],
+  selector: 'app-budgets', standalone: true, imports: [MoneyPipe],
   templateUrl: './budgets.component.html', styleUrl: './budgets.component.scss'
 })
 export class BudgetsComponent {
@@ -19,7 +19,7 @@ export class BudgetsComponent {
   saving = signal(false);
   error = signal('');
   validLimit = computed(() => Number.isFinite(this.draftLimit()) && this.draftLimit() >= 0);
-  month = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  readonly month = formatMonth(new Date());
 
   toggleEdit(id: string) {
     this.error.set('');

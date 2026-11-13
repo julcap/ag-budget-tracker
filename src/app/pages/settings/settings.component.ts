@@ -1,11 +1,11 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ThemeService } from '../../services/theme.service';
-import { AuthService } from '../../services/auth.service';
-import { SettingsService } from '../../services/settings.service';
+import { SettingsService, ThresholdKey } from '../../services/settings.service';
 import { CategoryService, UNCATEGORIZED } from '../../services/category.service';
 import { TransactionService } from '../../services/transaction.service';
-import { Router } from '@angular/router';
+import { TransactionType } from '../../models/transaction';
+import { CURRENCIES, CurrencyCode, currencySymbol } from '../../utils/money';
 
 @Component({
   selector: 'app-settings',
@@ -16,17 +16,23 @@ import { Router } from '@angular/router';
 })
 export class SettingsComponent {
   private themeService = inject(ThemeService);
-  private authService = inject(AuthService);
-  private settingsService = inject(SettingsService);
-  private router = inject(Router);
-
-  categories = inject(CategoryService);
   private transactions = inject(TransactionService);
-  categoryType: 'expense' | 'income' = 'expense';
+  readonly settings = inject(SettingsService);
+  readonly categories = inject(CategoryService);
+
+  readonly theme = this.themeService.theme;
+  readonly uncategorized = UNCATEGORIZED;
+  readonly currencies = CURRENCIES.map(code => ({ code, label: `${code} (${currencySymbol(code)})` }));
+  readonly thresholds: { key: ThresholdKey; label: string; hint: string }[] = [
+    { key: 'spendingWarningPercent', label: 'Warning (orange text)', hint: 'Spent % of monthly income that turns the spent amount orange' },
+    { key: 'spendingWarningIconPercent', label: 'Alert (warning icon)', hint: 'Spent % of monthly income that shows the warning icon' },
+    { key: 'spendingDangerPercent', label: 'Danger (red text)', hint: 'Spent % of monthly income that turns the spent amount red' }
+  ];
+
+  categoryType: TransactionType = 'expense';
   categoryName = '';
   categoryError = '';
   deletingCategory: string | null = null;
-  readonly uncategorized = UNCATEGORIZED;
 
   addCategory() {
     this.categoryError = '';
@@ -54,45 +60,15 @@ export class SettingsComponent {
     });
   }
 
-  theme = this.themeService.theme;
-
-  userName = 'Jordan Avery';
-  userEmail = 'jordan@example.com';
-  selectedCurrency = 'USD';
-
-  spendingWarningPercent = this.settingsService.spendingWarningPercent;
-  spendingWarningIconPercent = this.settingsService.spendingWarningIconPercent;
-  spendingDangerPercent = this.settingsService.spendingDangerPercent;
-
-  setWarningPercent(val: number | string) {
-    const num = typeof val === 'string' ? parseFloat(val) : val;
-    if (!isNaN(num)) {
-      this.settingsService.setSpendingWarningPercent(num);
-    }
+  setCurrency(currency: CurrencyCode) {
+    this.settings.update({ currency });
   }
 
-  setWarningIconPercent(val: number | string) {
-    const num = typeof val === 'string' ? parseFloat(val) : val;
-    if (!isNaN(num)) {
-      this.settingsService.setSpendingWarningIconPercent(num);
-    }
-  }
-
-  setDangerPercent(val: number | string) {
-    const num = typeof val === 'string' ? parseFloat(val) : val;
-    if (!isNaN(num)) {
-      this.settingsService.setSpendingDangerPercent(num);
-    }
+  setThreshold(key: ThresholdKey, value: number | string) {
+    this.settings.setThreshold(key, Number(value));
   }
 
   toggleTheme() {
     this.themeService.toggle();
-  }
-
-  deleteAccount() {
-    if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-      this.authService.logout();
-      this.router.navigate(['/login']);
-    }
   }
 }

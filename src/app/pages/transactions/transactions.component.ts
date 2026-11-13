@@ -1,71 +1,68 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { CommonModule, CurrencyPipe } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { TransactionService } from '../../services/transaction.service';
 import { CategoryService } from '../../services/category.service';
 import { TransactionFormComponent } from '../../components/transaction-form/transaction-form.component';
 import { BackdropComponent } from '../../UI/backdrop/backdrop.component';
-import { Transaction } from '../../models/transaction';
+import { compareByDate, signedAmount, Transaction } from '../../models/transaction';
+import { MoneyPipe } from '../../pipes/money.pipe';
+import { DisplayDatePipe } from '../../pipes/display-date.pipe';
 
 type SortField = 'date' | 'merchant' | 'category' | 'amount';
 type SortDirection = 'asc' | 'desc';
 
+const ALL = 'All';
+
+const COMPARATORS: Record<SortField, (a: Transaction, b: Transaction) => number> = {
+  date: compareByDate,
+  merchant: (a, b) => a.merchant.localeCompare(b.merchant),
+  category: (a, b) => a.category.localeCompare(b.category),
+  amount: (a, b) => signedAmount(a) - signedAmount(b)
+};
+
 @Component({
   selector: 'app-transactions',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    TransactionFormComponent,
-    BackdropComponent,
-    CurrencyPipe
-  ],
+  imports: [TransactionFormComponent, BackdropComponent, MoneyPipe, DisplayDatePipe],
   templateUrl: './transactions.component.html',
   styleUrl: './transactions.component.scss'
 })
 export class TransactionsComponent {
   private transactionsService = inject(TransactionService);
   private categoryService = inject(CategoryService);
-  transactions = this.transactionsService.transactions;
 
-  get categories() { return ['All', ...this.categoryService.allCategories()]; }
-  activeCategory = signal<string>('All');
-  query = signal<string>('');
+  readonly transactions = this.transactionsService.transactions;
+  readonly loadError = this.transactionsService.error;
+  readonly signedAmount = signedAmount;
+  readonly columns: { field: SortField; label: string; numeric?: boolean }[] = [
+    { field: 'date', label: 'Date' },
+    { field: 'merchant', label: 'Merchant' },
+    { field: 'category', label: 'Category' },
+    { field: 'amount', label: 'Amount', numeric: true }
+  ];
+
+  categories = computed(() => [ALL, ...this.categoryService.allCategories()]);
+  activeCategory = signal(ALL);
+  query = signal('');
   sortField = signal<SortField>('date');
   sortDirection = signal<SortDirection>('desc');
 
-  dialogVisible = signal<boolean>(false);
+  dialogVisible = signal(false);
   editingTransactionId = signal<string | null>(null);
 
   filteredTransactions = computed(() => {
     const q = this.query().trim().toLowerCase();
-    const cat = this.activeCategory();
-    const field = this.sortField();
-    const dir = this.sortDirection();
+    const category = this.activeCategory();
+    const compare = COMPARATORS[this.sortField()];
+    const direction = this.sortDirection() === 'asc' ? 1 : -1;
 
-    let list = this.transactions().filter(t => {
-      const matchesCategory = cat === 'All' || t.category.toLowerCase() === cat.toLowerCase();
-      const matchesQuery = !q ||
-        t.merchant.toLowerCase().includes(q) ||
-        t.category.toLowerCase().includes(q) ||
-        (t.notes && t.notes.toLowerCase().includes(q));
-      return matchesCategory && matchesQuery;
-    });
-
-    return list.sort((a, b) => {
-      let comparison = 0;
-      if (field === 'amount') {
-        comparison = a.amount - b.amount;
-      } else if (field === 'merchant') {
-        comparison = a.merchant.localeCompare(b.merchant);
-      } else if (field === 'category') {
-        comparison = a.category.localeCompare(b.category);
-      } else {
-        comparison = a.date.localeCompare(b.date);
-      }
-      return dir === 'asc' ? comparison : -comparison;
-    });
+    return this.transactions()
+      .filter(t =>
+        (category === ALL || t.category === category) &&
+        (!q || [t.merchant, t.category, t.notes ?? ''].some(text => text.toLowerCase().includes(q))))
+      .sort((a, b) => direction * compare(a, b));
   });
+
+  filteredTotal = computed(() => this.filteredTransactions().reduce((sum, t) => sum + signedAmount(t), 0));
 
   handleSearch(event: Event) {
     this.query.set((event.target as HTMLInputElement).value);
@@ -75,13 +72,23 @@ export class TransactionsComponent {
     this.activeCategory.set(category);
   }
 
+  clearFilters() {
+    this.query.set('');
+    this.activeCategory.set(ALL);
+  }
+
   toggleSort(field: SortField) {
     if (this.sortField() === field) {
       this.sortDirection.update(d => (d === 'asc' ? 'desc' : 'asc'));
     } else {
       this.sortField.set(field);
-      this.sortDirection.set('asc');
+      this.sortDirection.set(field === 'date' || field === 'amount' ? 'desc' : 'asc');
     }
+  }
+
+  ariaSort(field: SortField) {
+    if (this.sortField() !== field) return 'none';
+    return this.sortDirection() === 'asc' ? 'ascending' : 'descending';
   }
 
   onAddRequested() {
@@ -96,12 +103,5 @@ export class TransactionsComponent {
 
   closeDialog() {
     this.dialogVisible.set(false);
-    this.editingTransactionId.set(null);
-  }
-
-  formatAmount(amount: number, type?: string): string {
-    const isIncome = type === 'income' || amount > 0;
-    const formatted = Math.abs(amount).toFixed(2);
-    return isIncome ? `+$${formatted}` : `-$${formatted}`;
   }
 }

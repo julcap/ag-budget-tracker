@@ -4,11 +4,12 @@
     <button type="button" class="close-btn" (click)="cancel()" aria-label="Close">✕</button>
   </div>
   <form [formGroup]="form" (ngSubmit)="submit()">
-    <div class="type-selector">
+    <div class="type-selector" role="group" aria-label="Transaction type">
       <button
         type="button"
         class="type-btn"
         [class.active]="form.controls.type.value === 'expense'"
+        [attr.aria-pressed]="form.controls.type.value === 'expense'"
         (click)="setType('expense')"
       >
         Expense
@@ -17,6 +18,7 @@
         type="button"
         class="type-btn"
         [class.active]="form.controls.type.value === 'income'"
+        [attr.aria-pressed]="form.controls.type.value === 'income'"
         (click)="setType('income')"
       >
         Income
@@ -26,8 +28,8 @@
     <div class="form-group">
       <label for="amount">Amount</label>
       <div class="input-wrapper">
-        <span class="input-prefix">$</span>
-        <input id="amount" formControlName="amount" type="number" placeholder="0.00" />
+        <span class="input-prefix">{{ currencySymbol() }}</span>
+        <input id="amount" formControlName="amount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0.00" />
       </div>
       @if (form.controls.amount.invalid && form.controls.amount.touched) {
         <div class="form-error">Enter an amount greater than 0</div>
@@ -36,7 +38,7 @@
 
     <div class="form-group">
       <label for="merchant">Merchant / description</label>
-      <input id="merchant" formControlName="merchant" placeholder="e.g. Whole Foods Market" />
+      <input id="merchant" formControlName="merchant" maxlength="80" placeholder="e.g. Whole Foods Market" />
       @if (form.controls.merchant.invalid && form.controls.merchant.touched) {
         <div class="form-error">Merchant is required</div>
       }
@@ -66,9 +68,18 @@
       <textarea id="notes" formControlName="notes" placeholder="Anything worth remembering..." rows="2"></textarea>
     </div>
 
+    @if (error()) {
+      <p class="form-error" role="alert">{{ error() }}</p>
+    }
+
     <div class="form-actions">
+      @if (editingId) {
+        <button type="button" class="btn btn-danger-outline delete-btn" [disabled]="busy()" (click)="delete()">
+          {{ confirmingDelete() ? 'Confirm delete' : 'Delete' }}
+        </button>
+      }
       <button type="button" class="btn btn-secondary" (click)="cancel()">Cancel</button>
-      <button type="submit" class="btn btn-primary">Save</button>
+      <button type="submit" class="btn btn-primary" [disabled]="busy()">{{ busy() ? 'Saving…' : 'Save' }}</button>
     </div>
   </form>
 </div>

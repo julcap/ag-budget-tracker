@@ -1,306 +1,149 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
+import { of, throwError } from 'rxjs';
 import { TransactionFormComponent } from './transaction-form.component';
 import { TransactionService } from '../../services/transaction.service';
-import { ActivatedRoute, provideRouter, Router } from '@angular/router';
-import { signal } from '@angular/core';
+import { CategoryService } from '../../services/category.service';
 import { Transaction } from '../../models/transaction';
+import { todayIsoDate } from '../../utils/date';
 
 describe('TransactionFormComponent', () => {
   let component: TransactionFormComponent;
   let fixture: ComponentFixture<TransactionFormComponent>;
-  let transactionServiceMock: {
-    transactions: any;
+  let service: {
+    transactions: ReturnType<typeof signal<Transaction[]>>;
     add: jasmine.Spy;
     update: jasmine.Spy;
+    remove: jasmine.Spy;
   };
 
+  function create(transactionId: string | null = null) {
+    fixture = TestBed.createComponent(TransactionFormComponent);
+    component = fixture.componentInstance;
+    fixture.componentRef.setInput('transactionId', transactionId);
+    fixture.detectChanges();
+    spyOn(component.dialogClose, 'emit');
+  }
+
   beforeEach(async () => {
-    transactionServiceMock = {
-      transactions: signal<Transaction[]>([]),
-      add: jasmine.createSpy('add'),
-      update: jasmine.createSpy('update')
+    localStorage.removeItem('budget_categories');
+    service = {
+      transactions: signal<Transaction[]>([
+        { id: 'tx-1', type: 'income', merchant: 'Target', amount: 55, category: 'Salary', date: '2026-09-05', notes: 'Bonus' },
+        { id: 'legacy', type: 'expense', merchant: 'Old', amount: -5, category: 'Rent', date: 'Today' }
+      ]),
+      add: jasmine.createSpy('add').and.returnValue(of({})),
+      update: jasmine.createSpy('update').and.returnValue(of({})),
+      remove: jasmine.createSpy('remove').and.returnValue(of(undefined))
     };
 
     await TestBed.configureTestingModule({
       imports: [TransactionFormComponent],
-      providers: [
-        provideRouter([{ path: 'transactions', component: TransactionFormComponent }]),
-        { provide: TransactionService, useValue: transactionServiceMock }
-      ]
-    })
-    .compileComponents();
-
-    fixture = TestBed.createComponent(TransactionFormComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
+      providers: [{ provide: TransactionService, useValue: service }]
+    }).compileComponents();
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-
-  it('should submit negative amount when adding negative transaction', () => {
-    component.form.setValue({
-      type: 'expense',
-      merchant: 'Refund',
-      amount: -25.5,
-      category: 'Groceries',
-      date: 'Today',
-      notes: ''
-    });
-
-    component.submit();
-
-    expect(transactionServiceMock.add).toHaveBeenCalledWith({
-      type: 'expense',
-      merchant: 'Refund',
-      category: 'Groceries',
-      amount: -25.5,
-      date: 'Today'
-    });
-  });
-
-  it('should round amount to 2 decimal places and submit negative for expense', () => {
-    component.form.setValue({
-      type: 'expense',
-      merchant: 'Gas Station',
-      amount: 42.567,
-      category: 'Transport',
-      date: 'Today',
-      notes: ''
-    });
-
-    component.submit();
-
-    expect(transactionServiceMock.add).toHaveBeenCalledWith({
-      type: 'expense',
-      merchant: 'Gas Station',
-      category: 'Transport',
-      amount: -42.57,
-      date: 'Today'
-    });
-  });
-
-  it('should submit negative amount when adding an expense transaction with positive input', () => {
-    component.form.setValue({
-      type: 'expense',
-      merchant: 'Supermarket',
-      amount: 42.5,
-      category: 'Groceries',
-      date: 'Sep 10',
-      notes: ''
-    });
-
-    component.submit();
-
-    expect(transactionServiceMock.add).toHaveBeenCalledWith({
-      type: 'expense',
-      merchant: 'Supermarket',
-      category: 'Groceries',
-      amount: -42.5,
-      date: 'Sep 10'
-    });
-  });
-
-  it('should submit transaction with notes when adding a transaction', () => {
-    component.form.setValue({
-      type: 'expense',
-      merchant: 'Supermarket',
-      amount: 42.5,
-      category: 'Groceries',
-      date: '2026-09-09',
-      notes: 'Weekly grocery run'
-    });
-
-    component.submit();
-
-    expect(transactionServiceMock.add).toHaveBeenCalledWith({
-      type: 'expense',
-      merchant: 'Supermarket',
-      category: 'Groceries',
-      amount: -42.5,
-      date: '2026-09-09',
-      notes: 'Weekly grocery run'
-    });
-  });
-
-  it('should submit negative amount when editing an expense transaction', () => {
-    component.editingId = 'tx-1';
-    component.form.setValue({
-      type: 'expense',
-      merchant: 'Coffee Shop',
-      amount: 15,
-      category: 'Entertainment',
-      date: 'Sep 8',
-      notes: 'Meeting with Alex'
-    });
-
-    component.submit();
-
-    expect(transactionServiceMock.update).toHaveBeenCalledWith('tx-1', {
-      type: 'expense',
-      merchant: 'Coffee Shop',
-      category: 'Entertainment',
-      amount: -15,
-      date: 'Sep 8',
-      notes: 'Meeting with Alex'
-    });
-  });
-
-  it('should patch existing transaction values including date and notes on init', () => {
-    transactionServiceMock.transactions.set([
-      { id: 'tx-123', type: 'income', merchant: 'Target', amount: 55, category: 'Groceries', date: 'Sep 5', notes: 'Office supplies' }
-    ]);
-    const route = TestBed.inject(provideRouter([{ path: 'transactions/:id/edit', component: TransactionFormComponent }]) ? ActivatedRoute : ActivatedRoute);
-    spyOn(component['route'].snapshot.paramMap, 'get').and.returnValue('tx-123');
-
-    component.ngOnInit();
-
-    expect(component.form.value).toEqual({
-      type: 'income',
-      merchant: 'Target',
-      amount: 55,
-      category: 'Groceries',
-      date: 'Sep 5',
-      notes: 'Office supplies'
-    });
-  });
-
-  it('should default type to expense', () => {
-    expect(component.form.controls.type.value).toBe('expense');
-  });
-
-  it('should update type and categories when clicking income button', () => {
-    const buttons: HTMLButtonElement[] = fixture.nativeElement.querySelectorAll('.type-selector button');
-    expect(buttons.length).toBe(2);
-    expect(buttons[0].textContent?.trim()).toBe('Expense');
-    expect(buttons[1].textContent?.trim()).toBe('Income');
-
-    expect(buttons[0].classList.contains('active')).toBeTrue();
-    expect(buttons[1].classList.contains('active')).toBeFalse();
-    expect(component.categories).toEqual(component.expenseCategories);
-
-    buttons[1].click();
-    fixture.detectChanges();
-
-    expect(component.form.controls.type.value).toBe('income');
-    expect(component.categories).toEqual(component.incomeCategories);
-    expect(component.form.controls.category.value).toBe('Salary');
-    expect(buttons[0].classList.contains('active')).toBeFalse();
-    expect(buttons[1].classList.contains('active')).toBeTrue();
-  });
-
-  it('should switch categories back to expense and default to Groceries when clicking Expense', () => {
-    component.setType('income');
-    expect(component.form.controls.category.value).toBe('Salary');
-    expect(component.categories).toEqual(component.incomeCategories);
-
-    component.setType('expense');
-    expect(component.form.controls.category.value).toBe('Groceries');
-    expect(component.categories).toEqual(component.expenseCategories);
-  });
-
-  it('should preserve category if valid in both types', () => {
-    component.form.controls.category.setValue('Other');
-    component.setType('income');
-    expect(component.form.controls.category.value).toBe('Other');
-
-    component.setType('expense');
-    expect(component.form.controls.category.value).toBe('Other');
-  });
-
-  it('should submit transaction with positive amount when type income is selected', () => {
-    component.setType('income');
-    component.form.patchValue({
-      merchant: 'Paycheck',
-      amount: 3500,
-      category: 'Salary',
-      date: '2026-09-01'
-    });
-
-    component.submit();
-
-    expect(transactionServiceMock.add).toHaveBeenCalledWith({
-      type: 'income',
-      merchant: 'Paycheck',
-      category: 'Salary',
-      amount: 3500,
-      date: '2026-09-01'
-    });
-  });
-
-  it('should submit positive amount when editing an income transaction', () => {
-    component.editingId = 'tx-income-1';
-    component.form.setValue({
-      type: 'income',
-      merchant: 'Freelance Client',
-      amount: 750,
-      category: 'Freelance',
-      date: 'Sep 12',
-      notes: 'Website design'
-    });
-
-    component.submit();
-
-    expect(transactionServiceMock.update).toHaveBeenCalledWith('tx-income-1', {
-      type: 'income',
-      merchant: 'Freelance Client',
-      category: 'Freelance',
-      amount: 750,
-      date: 'Sep 12',
-      notes: 'Website design'
-    });
-  });
-
-  it('should reset form and emit dialogClose on cancel', () => {
-    spyOn(component.dialogClose, 'emit');
-
-    component.editingId = 'tx-123';
-    component.form.patchValue({
-      merchant: 'Some store',
-      amount: 99
-    });
-
-    component.cancel();
-
+  it('starts as a new expense dated today', () => {
+    create();
     expect(component.editingId).toBeNull();
-    expect(component.form.value).toEqual({
-      type: 'expense',
-      merchant: '',
-      amount: null,
-      category: 'Groceries',
-      date: 'Today',
-      notes: ''
+    expect(component.form.getRawValue()).toEqual({
+      type: 'expense', merchant: '', amount: null, category: 'Groceries', date: todayIsoDate(), notes: ''
     });
-    expect(component.dialogClose.emit).toHaveBeenCalled();
+    expect(fixture.nativeElement.querySelector('.delete-btn')).toBeNull();
   });
 
-  it('should call cancel when clicking Cancel button or close icon', () => {
-    spyOn(component, 'cancel');
-
-    const cancelBtn: HTMLButtonElement | null = fixture.nativeElement.querySelector('.btn-secondary');
-    expect(cancelBtn?.textContent?.trim()).toBe('Cancel');
-    cancelBtn?.click();
-
-    const closeBtn: HTMLButtonElement | null = fixture.nativeElement.querySelector('.close-btn');
-    expect(closeBtn).toBeTruthy();
-    closeBtn?.click();
-
-    expect(component.cancel).toHaveBeenCalledTimes(2);
-  });
-
-  it('should emit dialogClose on successful submit', () => {
-    spyOn(component.dialogClose, 'emit');
-
+  it('saves expenses as negative, rounded amounts with trimmed text, then closes', () => {
+    create();
     component.form.setValue({
-      type: 'expense',
-      merchant: 'Groceries Store',
-      amount: 45,
-      category: 'Groceries',
-      date: 'Today',
-      notes: ''
+      type: 'expense', merchant: ' Gas Station ', amount: 42.567, category: 'Transport', date: '2026-09-09', notes: '  '
     });
     component.submit();
+
+    expect(service.add).toHaveBeenCalledWith({
+      type: 'expense', merchant: 'Gas Station', category: 'Transport', amount: -42.57, date: '2026-09-09'
+    });
     expect(component.dialogClose.emit).toHaveBeenCalled();
+  });
+
+  it('saves income as a positive amount, including notes', () => {
+    create();
+    component.setType('income');
+    component.form.patchValue({ merchant: 'Paycheck', amount: 3500, date: '2026-09-01', notes: 'September' });
+    component.submit();
+
+    expect(service.add).toHaveBeenCalledWith({
+      type: 'income', merchant: 'Paycheck', category: 'Salary', amount: 3500, date: '2026-09-01', notes: 'September'
+    });
+  });
+
+  it('rejects zero, negative and missing amounts and blank merchants', () => {
+    create();
+    for (const amount of [0, -5, null]) {
+      component.form.patchValue({ merchant: 'Shop', amount });
+      component.submit();
+    }
+    component.form.patchValue({ merchant: '   ', amount: 5 });
+    component.submit();
+
+    expect(service.add).not.toHaveBeenCalled();
+    expect(component.form.touched).toBeTrue();
+  });
+
+  it('loads an existing transaction and updates it', () => {
+    create('tx-1');
+    expect(component.editingId).toBe('tx-1');
+    expect(component.form.getRawValue()).toEqual({
+      type: 'income', merchant: 'Target', amount: 55, category: 'Salary', date: '2026-09-05', notes: 'Bonus'
+    });
+
+    component.form.patchValue({ amount: 60 });
+    component.submit();
+    expect(service.update).toHaveBeenCalledWith('tx-1', jasmine.objectContaining({ amount: 60, type: 'income' }));
+  });
+
+  it('converts legacy dates so the date input can display them', () => {
+    create('legacy');
+    expect(component.form.controls.date.value).toBe(todayIsoDate());
+  });
+
+  it('keeps the dialog open and shows an error when saving fails', () => {
+    service.add.and.returnValue(throwError(() => new Error('offline')));
+    create();
+    component.form.patchValue({ merchant: 'Shop', amount: 5 });
+    component.submit();
+
+    expect(component.dialogClose.emit).not.toHaveBeenCalled();
+    expect(component.busy()).toBeFalse();
+    expect(component.error()).toContain('Could not save');
+  });
+
+  it('asks for confirmation before deleting', () => {
+    create('tx-1');
+    component.delete();
+    expect(service.remove).not.toHaveBeenCalled();
+    expect(component.confirmingDelete()).toBeTrue();
+
+    component.delete();
+    expect(service.remove).toHaveBeenCalledWith('tx-1');
+    expect(component.dialogClose.emit).toHaveBeenCalled();
+  });
+
+  it('switches category lists with the type, keeping categories valid for both', () => {
+    create();
+    const categories = TestBed.inject(CategoryService);
+    component.setType('income');
+    expect(component.categories).toEqual(categories.incomeCategories());
+    expect(component.form.controls.category.value).toBe('Salary');
+
+    component.form.controls.category.setValue('Other');
+    component.setType('expense');
+    expect(component.form.controls.category.value).toBe('Other');
+  });
+
+  it('closes from the Cancel button and the close icon', () => {
+    create();
+    fixture.nativeElement.querySelector('.btn-secondary').click();
+    fixture.nativeElement.querySelector('.close-btn').click();
+    expect(component.dialogClose.emit).toHaveBeenCalledTimes(2);
   });
 });

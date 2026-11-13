@@ -1,38 +1,35 @@
 <div class="page">
   <div class="page-header">
-    <div>
-      <div class="title-row">
-        <h1>Transactions</h1>
-<!--
-        <span class="devtag">Route: /transactions · &#64;for + computed() filter/sort</span>
--->
-      </div>
-    </div>
-    <button type="button" class="btn btn-primary add-btn" (click)="onAddRequested()">
-      + Add transaction
-    </button>
+    <h1>Transactions</h1>
+    <button type="button" class="btn btn-primary" (click)="onAddRequested()">+ Add transaction</button>
   </div>
+
+  @if (loadError()) {
+    <p class="alert" role="alert">{{ loadError() }}</p>
+  }
 
   <div class="filter-bar">
     <div class="search-wrapper">
-      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg class="search-icon" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="11" cy="11" r="8"/>
         <line x1="21" y1="21" x2="16.65" y2="16.65"/>
       </svg>
       <input
-        type="text"
-        placeholder="Search merchant…"
+        type="search"
+        placeholder="Search merchant, category, notes…"
+        aria-label="Search transactions"
         [value]="query()"
         (input)="handleSearch($event)"
       />
     </div>
 
-    <div class="category-pills">
-      @for (cat of categories; track cat) {
+    <div class="category-pills" role="group" aria-label="Filter by category">
+      @for (cat of categories(); track cat) {
         <button
           type="button"
           class="pill-btn"
           [class.active]="activeCategory() === cat"
+          [attr.aria-pressed]="activeCategory() === cat"
           (click)="setCategory(cat)"
         >
           {{ cat }}
@@ -45,71 +42,63 @@
     <table class="transactions-table">
       <thead>
         <tr>
-          <th (click)="toggleSort('date')" class="sortable">
-            DATE
-            <span class="sort-indicator">
-              @if (sortField() === 'date') {
-                {{ sortDirection() === 'asc' ? '↑' : '↓' }}
-              }
-            </span>
-          </th>
-          <th (click)="toggleSort('merchant')" class="sortable">
-            MERCHANT
-            <span class="sort-indicator">
-              @if (sortField() === 'merchant') {
-                {{ sortDirection() === 'asc' ? '↑' : '↓' }}
-              }
-            </span>
-          </th>
-          <th (click)="toggleSort('category')" class="sortable">
-            CATEGORY
-            <span class="sort-indicator">
-              @if (sortField() === 'category') {
-                {{ sortDirection() === 'asc' ? '↑' : '↓' }}
-              }
-            </span>
-          </th>
-          <th (click)="toggleSort('amount')" class="sortable text-right">
-            AMOUNT
-            <span class="sort-indicator">
-              @if (sortField() === 'amount') {
-                {{ sortDirection() === 'asc' ? '↑' : '↓' }}
-              }
-            </span>
-          </th>
+          @for (col of columns; track col.field) {
+            <th [class.text-right]="col.numeric" [attr.aria-sort]="ariaSort(col.field)">
+              <button type="button" class="sort-btn" (click)="toggleSort(col.field)">
+                {{ col.label }}
+                <span class="sort-indicator" aria-hidden="true">
+                  @if (sortField() === col.field) { {{ sortDirection() === 'asc' ? '↑' : '↓' }} }
+                </span>
+              </button>
+            </th>
+          }
         </tr>
       </thead>
       <tbody>
         @for (t of filteredTransactions(); track t.id) {
-          <tr class="transaction-row" (click)="onEditRequested(t.id)">
-            <td class="date-cell">{{ t.date }}</td>
-            <td class="merchant-cell">{{ t.merchant }}</td>
-            <td class="category-cell">
-              <span class="category-badge">{{ t.category }}</span>
+          <tr
+            class="transaction-row"
+            tabindex="0"
+            [attr.aria-label]="'Edit ' + t.merchant"
+            (click)="onEditRequested(t.id)"
+            (keydown.enter)="onEditRequested(t.id)"
+          >
+            <td class="date-cell">{{ t.date | displayDate }}</td>
+            <td class="merchant-cell">
+              {{ t.merchant }}
+              @if (t.notes) { <span class="notes-text">{{ t.notes }}</span> }
             </td>
-            <td class="amount-cell text-right" [class.income]="t.amount > 0 || t.type === 'income'">
-              {{ formatAmount(t.amount, t.type) }}
+            <td class="category-cell"><span class="category-badge">{{ t.category }}</span></td>
+            <td class="amount-cell text-right" [class.income]="signedAmount(t) > 0">
+              {{ signedAmount(t) | money: 'signed' }}
             </td>
           </tr>
         } @empty {
           <tr>
             <td colspan="4" class="empty-state">
-              No transactions match "{{ query() }}"
+              @if (transactions().length) {
+                No transactions match your filters.
+                <button type="button" class="link-btn" (click)="clearFilters()">Clear filters</button>
+              } @else {
+                No transactions yet.
+                <button type="button" class="link-btn" (click)="onAddRequested()">Add your first one</button>
+              }
             </td>
           </tr>
         }
       </tbody>
     </table>
-    <div class="table-hint">
-      Row click → opens Edit Transaction (Transaction Form) · header click → sorts
-    </div>
+    @if (filteredTransactions().length) {
+      <div class="table-footer">
+        <span>{{ filteredTransactions().length }} {{ filteredTransactions().length === 1 ? 'transaction' : 'transactions' }}</span>
+        <span>Net <strong [class.income]="filteredTotal() > 0">{{ filteredTotal() | money: 'signed' }}</strong></span>
+      </div>
+    }
   </div>
 </div>
 
 <app-backdrop [isOpen]="dialogVisible()" (close)="closeDialog()">
-  <app-transaction-form
-    [transactionId]="editingTransactionId()"
-    (dialogClose)="closeDialog()"
-  />
+  @if (dialogVisible()) {
+    <app-transaction-form [transactionId]="editingTransactionId()" (dialogClose)="closeDialog()" />
+  }
 </app-backdrop>
-

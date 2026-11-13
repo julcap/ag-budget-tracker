@@ -1,85 +1,76 @@
 <div class="page dashboard-page">
   <div class="page-header">
-    <div class="title-row">
+    <div>
       <h1>Dashboard</h1>
-   <!--   <span class="devtag">Route: /dashboard &middot; OnPush + signals</span>-->
+      <p class="page-subtitle">{{ month }}</p>
     </div>
+    <button type="button" class="btn btn-primary" (click)="openAdd()">+ Add transaction</button>
   </div>
 
+  @if (loadError()) {
+    <p class="alert" role="alert">{{ loadError() }}</p>
+  }
+
   <div class="cards-grid">
+    <app-balance-card label="Balance" [value]="balance()" [valueColor]="balanceTone()" />
+    <app-balance-card label="Income this month" [value]="incomeThisMonth()" trend="up" />
     <app-balance-card
-      label="BALANCE"
-      [value]="balance()"
-      [valueColor]="isBalanceNegative() ? 'red' : null"
-    />
-    <app-balance-card
-      label="INCOME THIS MONTH"
-      [value]="incomeThisMonth()"
-      [trend]="'up'"
-    />
-    <app-balance-card
-      label="SPENT THIS MONTH"
+      label="Spent this month"
       [value]="spentThisMonth()"
-      [valueColor]="spentValueColor()"
+      [valueColor]="spentTone()"
       [warning]="isSpentWarningIcon()"
     />
   </div>
 
   <div class="dashboard-grid">
-    <div class="dashboard-card category-spending-card">
+    <section class="dashboard-card" aria-labelledby="category-spending-title">
       <div class="card-header">
-        <div class="card-title">Spending by category</div>
-        <span class="devtag">computed() over signal&lt;Txn[]&gt;</span>
+        <h2 class="card-title" id="category-spending-title">Spending by category</h2>
+        <a routerLink="/budgets" class="view-all-link">Budgets &rarr;</a>
       </div>
-      <div class="active-category-detail">{{ activeCategoryDetail() }}</div>
-      <div class="category-bars">
-        @for (cat of categorySpending(); track cat.name) {
-          <div class="category-bar-row" (click)="toggleCategory(cat.name)">
-            <div class="category-name">{{ cat.name }}</div>
-            <div class="progress-track">
-              <div
-                class="progress-fill"
-                [style.width.%]="cat.pct"
-                [class.active]="activeCategory() === cat.name"
-              ></div>
-            </div>
-            <div class="category-amount">{{ cat.formattedAmount }}</div>
-          </div>
-        } @empty {
-          <div class="empty-state">No expense categories</div>
-        }
-      </div>
-    </div>
+      @if (categorySpending().length) {
+        <p class="active-category-detail" aria-live="polite">{{ activeCategoryDetail() }}</p>
+        <div class="category-bars">
+          @for (cat of categorySpending(); track cat.name) {
+            <button
+              type="button"
+              class="category-bar-row"
+              [class.active]="activeCategory() === cat.name"
+              [attr.aria-pressed]="activeCategory() === cat.name"
+              (click)="toggleCategory(cat.name)"
+            >
+              <span class="category-name">{{ cat.name }}</span>
+              <span class="progress-track"><span class="progress-fill" [style.width.%]="cat.pct"></span></span>
+              <span class="category-amount">{{ cat.amount | money }}</span>
+            </button>
+          }
+        </div>
+      } @else {
+        <p class="empty-state">No spending recorded this month.</p>
+      }
+    </section>
 
-    <div class="dashboard-card recent-transactions-card">
+    <section class="dashboard-card" aria-labelledby="recent-title">
       <div class="card-header">
-        <div class="card-title">Recent transactions</div>
+        <h2 class="card-title" id="recent-title">Recent transactions</h2>
         <a routerLink="/transactions" class="view-all-link">View all &rarr;</a>
       </div>
       <div class="recent-list">
         @for (t of recentTransactions(); track t.id) {
-          <div class="recent-item-container">
-            <div
-              class="recent-item"
-              (click)="toggleSelectedTx(t.id)"
-              [class.selected]="selectedTxId() === t.id"
-            >
-              <div class="recent-item-main">
-                <div class="recent-merchant">{{ t.merchant }}</div>
-                <div class="recent-meta">{{ t.date }} &middot; {{ t.category }}</div>
-              </div>
-              <div class="recent-amount" [class.income]="t.amount > 0 || t.type === 'income'">
-                {{ (t.amount < 0 ? '-$' : '+$') + Math.abs(t.amount).toFixed(2) }}
-              </div>
-            </div>
-            @if (selectedTxId() === t.id) {
-              <div class="selected-hint">&rarr; opens Edit Transaction (Transaction Form)</div>
-            }
-          </div>
+          <app-transaction-row [transaction]="t" (edit)="openEdit($event)" />
         } @empty {
-          <div class="empty-state">No transactions yet</div>
+          <div class="empty-state">
+            <p>No transactions yet.</p>
+            <button type="button" class="btn btn-secondary" (click)="openAdd()">Add your first transaction</button>
+          </div>
         }
       </div>
-    </div>
+    </section>
   </div>
 </div>
+
+<app-backdrop [isOpen]="dialogVisible()" (close)="closeDialog()">
+  @if (dialogVisible()) {
+    <app-transaction-form [transactionId]="editingTransactionId()" (dialogClose)="closeDialog()" />
+  }
+</app-backdrop>

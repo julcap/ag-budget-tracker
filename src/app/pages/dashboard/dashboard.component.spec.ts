@@ -1,191 +1,139 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { DashboardComponent } from './dashboard.component';
-import { provideHttpClient } from '@angular/common/http';
+import { computed, signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
+import { DashboardComponent } from './dashboard.component';
 import { TransactionService } from '../../services/transaction.service';
 import { SettingsService } from '../../services/settings.service';
-import { signal, WritableSignal } from '@angular/core';
 import { Transaction } from '../../models/transaction';
+import { isSameMonth, parseTransactionDate, todayIsoDate } from '../../utils/date';
 
 describe('DashboardComponent', () => {
   let component: DashboardComponent;
   let fixture: ComponentFixture<DashboardComponent>;
-  let transactionsSignal: WritableSignal<Transaction[]>;
-  let settingsService: SettingsService;
+  let settings: SettingsService;
+  const transactions = signal<Transaction[]>([]);
+  const today = todayIsoDate();
+
+  const tx = (id: string, type: Transaction['type'], amount: number, category: string, date = today): Transaction =>
+    ({ id, type, merchant: id, amount, category, date });
 
   beforeEach(async () => {
     localStorage.clear();
-    transactionsSignal = signal<Transaction[]>([]);
-
+    transactions.set([]);
     await TestBed.configureTestingModule({
       imports: [DashboardComponent],
       providers: [
-        provideHttpClient(),
         provideRouter([]),
-        SettingsService,
         {
           provide: TransactionService,
           useValue: {
-            transactions: transactionsSignal.asReadonly()
+            transactions,
+            error: signal(''),
+            currentMonth: computed(() => transactions().filter(t => isSameMonth(parseTransactionDate(t.date), new Date())))
           }
         }
       ]
     }).compileComponents();
 
-    settingsService = TestBed.inject(SettingsService);
+    settings = TestBed.inject(SettingsService);
     fixture = TestBed.createComponent(DashboardComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
 
-  afterEach(() => {
-    localStorage.clear();
-  });
+  afterEach(() => localStorage.clear());
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-
-  it('should compute balance and totals with default fallback when empty', () => {
-    expect(component.balance()).toBe('$2,450.00');
-    expect(component.isBalanceNegative()).toBeFalse();
-    expect(component.incomeThisMonth()).toBe('$4,200.00');
-    expect(component.spentThisMonth()).toBe('$1,750.00');
-    expect(component.isSpentWarning()).toBeFalse();
+  it('shows zeros and empty states instead of placeholder data when there are no transactions', () => {
+    expect(component.balance()).toBe('$0.00');
+    expect(component.incomeThisMonth()).toBe('$0.00');
+    expect(component.spentThisMonth()).toBe('$0.00');
+    expect(component.categorySpending()).toEqual([]);
     expect(component.isSpentWarningIcon()).toBeFalse();
-    expect(component.isSpentDanger()).toBeFalse();
-    expect(component.spentValueColor()).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('No transactions yet');
   });
 
-  it('should format negative balance with minus sign and flag isBalanceNegative as true', () => {
-    transactionsSignal.set([
-      { id: '1', merchant: 'Rent', amount: -1500, category: 'Rent', date: 'Sep 1', type: 'expense' },
-      { id: '2', merchant: 'Salary', amount: 1000, category: 'Salary', date: 'Sep 2', type: 'income' }
+  it('computes the all-time balance but only this month in the monthly cards', () => {
+    transactions.set([
+      tx('salary', 'income', 1000, 'Salary'),
+      tx('rent', 'expense', -1500, 'Rent'),
+      tx('old', 'income', 300, 'Salary', '2001-01-01')
     ]);
     fixture.detectChanges();
 
-    expect(component.balance()).toBe('-$500.00');
-    expect(component.isBalanceNegative()).toBeTrue();
-
-    const balanceCard = fixture.nativeElement.querySelector('.cards-grid app-balance-card');
-    expect(balanceCard.querySelector('.card-value')?.classList.contains('color-danger')).toBeTrue();
+    expect(component.balance()).toBe('-$200.00');
+    expect(component.balanceTone()).toBe('danger');
+    expect(component.incomeThisMonth()).toBe('$1,000.00');
+    expect(component.spentThisMonth()).toBe('$1,500.00');
+    const balanceCard = fixture.nativeElement.querySelector('app-balance-card .card-value');
+    expect(balanceCard.classList).toContain('color-danger');
   });
 
-  it('should set spent color to orange when spent is greater than 50% of income', () => {
-    transactionsSignal.set([
-      { id: '1', merchant: 'Salary', amount: 1000, category: 'Salary', date: 'Sep 1', type: 'income' },
-      { id: '2', merchant: 'Groceries', amount: -600, category: 'Groceries', date: 'Sep 2', type: 'expense' }
-    ]);
-    fixture.detectChanges();
+  it('treats an expense stored with a positive amount as spending', () => {
+    transactions.set([tx('legacy', 'expense', 50, 'Groceries')]);
+    expect(component.balance()).toBe('-$50.00');
+    expect(component.spentThisMonth()).toBe('$50.00');
+  });
 
-    expect(component.isSpentWarning()).toBeTrue();
+  it('applies the spending thresholds from settings', () => {
+    transactions.set([tx('salary', 'income', 1000, 'Salary'), tx('food', 'expense', -600, 'Groceries')]);
+    expect(component.spentTone()).toBe('warn');
     expect(component.isSpentWarningIcon()).toBeFalse();
-    expect(component.isSpentDanger()).toBeFalse();
-    expect(component.spentValueColor()).toBe('orange');
 
-    const cards = fixture.nativeElement.querySelectorAll('.cards-grid app-balance-card');
-    const spentCard = cards[2];
-    expect(spentCard.querySelector('.card-value')?.classList.contains('color-warn')).toBeTrue();
-    expect(spentCard.querySelector('.warning-icon')).toBeFalsy();
-  });
-
-  it('should show warning icon and orange color when spent is 75% or more of income', () => {
-    transactionsSignal.set([
-      { id: '1', merchant: 'Salary', amount: 1000, category: 'Salary', date: 'Sep 1', type: 'income' },
-      { id: '2', merchant: 'Groceries', amount: -800, category: 'Groceries', date: 'Sep 2', type: 'expense' }
-    ]);
-    fixture.detectChanges();
-
-    expect(component.isSpentWarning()).toBeTrue();
+    settings.setThreshold('spendingWarningIconPercent', 60);
     expect(component.isSpentWarningIcon()).toBeTrue();
-    expect(component.isSpentDanger()).toBeFalse();
-    expect(component.spentValueColor()).toBe('orange');
 
-    const cards = fixture.nativeElement.querySelectorAll('.cards-grid app-balance-card');
-    const spentCard = cards[2];
-    expect(spentCard.querySelector('.card-value')?.classList.contains('color-warn')).toBeTrue();
-    expect(spentCard.querySelector('.warning-icon')).toBeTruthy();
+    settings.setThreshold('spendingDangerPercent', 55);
+    expect(component.spentTone()).toBe('danger');
+
+    settings.resetThresholds();
+    transactions.set([tx('salary', 'income', 1000, 'Salary'), tx('food', 'expense', -100, 'Groceries')]);
+    expect(component.spentTone()).toBeNull();
   });
 
-  it('should set spent color to red when spent is greater than income', () => {
-    transactionsSignal.set([
-      { id: '1', merchant: 'Salary', amount: 1000, category: 'Salary', date: 'Sep 1', type: 'income' },
-      { id: '2', merchant: 'Rent', amount: -1200, category: 'Rent', date: 'Sep 2', type: 'expense' }
-    ]);
-    fixture.detectChanges();
-
-    expect(component.isSpentWarning()).toBeTrue();
+  it('flags any spending with no income as danger', () => {
+    transactions.set([tx('food', 'expense', -10, 'Groceries')]);
+    expect(component.spentTone()).toBe('danger');
     expect(component.isSpentWarningIcon()).toBeTrue();
-    expect(component.isSpentDanger()).toBeTrue();
-    expect(component.spentValueColor()).toBe('red');
-
-    const cards = fixture.nativeElement.querySelectorAll('.cards-grid app-balance-card');
-    const spentCard = cards[2];
-    expect(spentCard.querySelector('.card-value')?.classList.contains('color-danger')).toBeTrue();
-    expect(spentCard.querySelector('.warning-icon')).toBeTruthy();
   });
 
-  it('should react to global threshold changes from SettingsService', () => {
-    transactionsSignal.set([
-      { id: '1', merchant: 'Salary', amount: 1000, category: 'Salary', date: 'Sep 1', type: 'income' },
-      { id: '2', merchant: 'Groceries', amount: -400, category: 'Groceries', date: 'Sep 2', type: 'expense' }
+  it('groups this month\'s spending by category, largest first, with shares', () => {
+    transactions.set([
+      tx('a', 'expense', -300, 'Rent'),
+      tx('b', 'expense', -100, 'Groceries'),
+      tx('c', 'income', 999, 'Salary'),
+      tx('d', 'expense', -500, 'Rent', '2001-01-01')
     ]);
-    fixture.detectChanges();
-
-    // 40% spent with default 50% warning threshold is normal
-    expect(component.spentValueColor()).toBeNull();
-
-    // Lower warning threshold to 30%
-    settingsService.setSpendingWarningPercent(30);
-    fixture.detectChanges();
-
-    expect(component.isSpentWarning()).toBeTrue();
-    expect(component.spentValueColor()).toBe('orange');
-
-    // Lower danger threshold to 35%
-    settingsService.setSpendingDangerPercent(35);
-    fixture.detectChanges();
-
-    expect(component.isSpentDanger()).toBeTrue();
-    expect(component.spentValueColor()).toBe('red');
-  });
-
-  it('should not flag warning or danger when spent is below configured thresholds', () => {
-    transactionsSignal.set([
-      { id: '1', merchant: 'Salary', amount: 1000, category: 'Salary', date: 'Sep 1', type: 'income' },
-      { id: '2', merchant: 'Groceries', amount: -400, category: 'Groceries', date: 'Sep 2', type: 'expense' }
+    expect(component.categorySpending()).toEqual([
+      { name: 'Rent', amount: 300, pct: 100, share: 75 },
+      { name: 'Groceries', amount: 100, pct: 33, share: 25 }
     ]);
-    fixture.detectChanges();
 
-    expect(component.isSpentWarning()).toBeFalse();
-    expect(component.isSpentWarningIcon()).toBeFalse();
-    expect(component.isSpentDanger()).toBeFalse();
-
-    const cards = fixture.nativeElement.querySelectorAll('.cards-grid app-balance-card');
-    const spentCard = cards[2];
-    expect(spentCard.querySelector('.card-value')?.classList.contains('color-warn')).toBeFalse();
-    expect(spentCard.querySelector('.card-value')?.classList.contains('color-danger')).toBeFalse();
-    expect(spentCard.querySelector('.warning-icon')).toBeFalsy();
-  });
-
-  it('should compute category spending and active category detail', () => {
-    const cats = component.categorySpending();
-    expect(cats.length).toBeGreaterThan(0);
-    expect(component.activeCategoryDetail()).toBe('Click a category to see its share of spending');
-
-    component.toggleCategory(cats[0].name);
-    expect(component.activeCategory()).toBe(cats[0].name);
-    expect(component.activeCategoryDetail()).toContain(cats[0].name);
-
-    component.toggleCategory(cats[0].name);
+    component.toggleCategory('Groceries');
+    expect(component.activeCategoryDetail()).toBe('Groceries: $100.00 · 25% of spending this month');
+    component.toggleCategory('Groceries');
     expect(component.activeCategory()).toBeNull();
   });
 
-  it('should toggle selected transaction', () => {
-    expect(component.selectedTxId()).toBeNull();
-    component.toggleSelectedTx('1');
-    expect(component.selectedTxId()).toBe('1');
-    component.toggleSelectedTx('1');
-    expect(component.selectedTxId()).toBeNull();
+  it('lists the five most recent transactions newest first', () => {
+    transactions.set(['2026-01-03', '2026-01-01', '2026-01-06', '2026-01-02', '2026-01-05', '2026-01-04']
+      .map((date, i) => tx(`t${i}`, 'expense', -1, 'Rent', date)));
+    expect(component.recentTransactions().map(t => t.date))
+      .toEqual(['2026-01-06', '2026-01-05', '2026-01-04', '2026-01-03', '2026-01-02']);
+  });
+
+  it('opens the transaction dialog for adding and editing', () => {
+    component.openAdd();
+    expect(component.dialogVisible()).toBeTrue();
+    expect(component.editingTransactionId()).toBeNull();
+    component.openEdit('abc');
+    expect(component.editingTransactionId()).toBe('abc');
+    component.closeDialog();
+    expect(component.dialogVisible()).toBeFalse();
+  });
+
+  it('formats amounts in the selected currency', () => {
+    transactions.set([tx('salary', 'income', 1234.5, 'Salary')]);
+    settings.update({ currency: 'EUR' });
+    expect(component.balance()).toBe('€1,234.50');
   });
 });

@@ -64,14 +64,16 @@ describe('SettingsComponent', () => {
     expect(component.theme()).not.toEqual(initial);
   });
 
-  it('should update spending thresholds', () => {
-    component.setWarningPercent(45);
+  it('should update spending thresholds from input values', () => {
+    component.setThreshold('spendingWarningPercent', '45');
     expect(settingsService.spendingWarningPercent()).toBe(45);
 
-    component.setWarningIconPercent(70);
-    expect(settingsService.spendingWarningIconPercent()).toBe(70);
-
-    component.setDangerPercent(95);
+    component.setThreshold('spendingDangerPercent', 95);
     expect(settingsService.spendingDangerPercent()).toBe(95);
+  });
+
+  it('should persist the selected currency', () => {
+    component.setCurrency('DKK');
+    expect(settingsService.currency()).toBe('DKK');
   });
 });

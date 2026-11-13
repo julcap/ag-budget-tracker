@@ -30,13 +30,11 @@
       color: var(--color-ok);
     }
 
-    &.color-danger,
-    &.color-red {
+    &.color-danger {
       color: var(--color-danger);
     }
 
-    &.color-warn,
-    &.color-orange {
+    &.color-warn {
       color: var(--color-warn);
     }
   }

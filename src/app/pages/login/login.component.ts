@@ -18,11 +18,11 @@ export class LoginComponent {
   signedIn = signal(false);
 
   form = new FormGroup({
-    email: new FormControl('jordan@example.com', {
+    email: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required, Validators.email]
     }),
-    password: new FormControl('••••••••', {
+    password: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required]
     })

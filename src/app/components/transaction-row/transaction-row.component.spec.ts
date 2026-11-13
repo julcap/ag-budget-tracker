@@ -11,7 +11,7 @@ describe('TransactionRowComponent', () => {
     merchant: 'Whole Foods Market',
     amount: -84.20,
     category: 'Groceries',
-    date: 'Today',
+    date: '2026-09-08',
     type: 'expense'
   };
 
@@ -28,6 +28,12 @@ describe('TransactionRowComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should render a formatted date and signed amount', () => {
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.date-text')?.textContent).toContain('Sep 8, 2026');
+    expect(el.querySelector('.amount-value')?.textContent?.trim()).toBe('-$84.20');
   });
 
   it('should emit edit event on click', () => {

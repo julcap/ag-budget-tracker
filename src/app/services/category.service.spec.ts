@@ -1,12 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { CategoryService, UNCATEGORIZED } from './category.service';
-import {
-  ALL_CATEGORIES,
-  DEFAULT_EXPENSE_CATEGORY,
-  DEFAULT_INCOME_CATEGORY,
-  EXPENSE_CATEGORIES,
-  INCOME_CATEGORIES
-} from '../models/category';
+import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '../models/category';
 
 describe('CategoryService', () => {
   let service: CategoryService;
@@ -36,7 +30,7 @@ describe('CategoryService', () => {
   it('should expose expense, income and all categories as signals', () => {
     expect(service.expenseCategories()).toEqual([...EXPENSE_CATEGORIES, UNCATEGORIZED]);
     expect(service.incomeCategories()).toEqual([...INCOME_CATEGORIES, UNCATEGORIZED]);
-    expect([...service.allCategories()].sort()).toEqual([...ALL_CATEGORIES, UNCATEGORIZED].sort());
+    expect([...service.allCategories()].sort()).toEqual([...new Set([...EXPENSE_CATEGORIES, ...INCOME_CATEGORIES, UNCATEGORIZED])].sort());
   });
 
   it('should return appropriate categories for type', () => {
@@ -45,8 +39,8 @@ describe('CategoryService', () => {
   });
 
   it('should return default category for type', () => {
-    expect(service.getDefaultCategory('expense')).toBe(DEFAULT_EXPENSE_CATEGORY);
-    expect(service.getDefaultCategory('income')).toBe(DEFAULT_INCOME_CATEGORY);
+    expect(service.getDefaultCategory('expense')).toBe('Groceries');
+    expect(service.getDefaultCategory('income')).toBe('Salary');
   });
 
   it('should correctly identify expense and income categories', () => {

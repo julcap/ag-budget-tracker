@@ -1,0 +1,112 @@
+<div class="page settings-page">
+  <div class="page-header">
+    <h1>Settings</h1>
+  </div>
+
+  <section class="settings-card">
+    <h2 class="settings-title">Profile</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="profileName">Name</label>
+        <input id="profileName" type="text" autocomplete="name" placeholder="Your name"
+               [ngModel]="settings.userName()" (ngModelChange)="settings.update({ userName: $event })" />
+      </div>
+      <div class="form-group">
+        <label for="profileEmail">Email</label>
+        <input id="profileEmail" type="email" autocomplete="email" placeholder="you@email.com"
+               [ngModel]="settings.userEmail()" (ngModelChange)="settings.update({ userEmail: $event })" />
+      </div>
+    </div>
+  </section>
+
+  <section class="settings-card">
+    <h2 class="settings-title">Preferences</h2>
+
+    <div class="settings-row">
+      <label class="setting-label" for="currency">Currency</label>
+      <select id="currency" class="currency-select" [ngModel]="settings.currency()" (ngModelChange)="setCurrency($event)">
+        @for (currency of currencies; track currency.code) {
+          <option [value]="currency.code">{{ currency.label }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="settings-row">
+      <span class="setting-label" id="themeLabel">Theme</span>
+      <button
+        type="button"
+        class="theme-toggle"
+        role="switch"
+        aria-labelledby="themeLabel"
+        [attr.aria-checked]="theme() === 'dark'"
+        [class.is-dark]="theme() === 'dark'"
+        (click)="toggleTheme()"
+      >
+        <span class="theme-option" aria-hidden="true">Light</span>
+        <span class="theme-option" aria-hidden="true">Dark</span>
+      </button>
+    </div>
+  </section>
+
+  <section class="settings-card">
+    <h2 class="settings-title">Categories</h2>
+    <p class="setting-hint">Categories are shared across transactions and budgets. Deleting one moves its transactions to Uncategorized.</p>
+    <div class="category-controls">
+      <div class="form-group">
+        <label for="categoryType">Category type</label>
+        <select id="categoryType" [(ngModel)]="categoryType" [disabled]="deletingCategory !== null">
+          <option value="expense">Expense</option>
+          <option value="income">Income</option>
+        </select>
+      </div>
+      <form class="category-add" (ngSubmit)="addCategory()">
+        <div class="form-group">
+          <label for="categoryName">New category</label>
+          <input id="categoryName" name="categoryName" [(ngModel)]="categoryName" maxlength="60" placeholder="e.g. Healthcare" />
+        </div>
+        <button class="btn btn-primary" type="submit" [disabled]="!categoryName.trim() || deletingCategory !== null">Add</button>
+      </form>
+    </div>
+    @if (categoryError) { <p class="form-error" role="alert">{{ categoryError }}</p> }
+    @for (category of categories.getCategories(categoryType); track category) {
+      <div class="settings-row category-row">
+        <span>{{ category }}</span>
+        @if (category !== uncategorized) {
+          <button class="btn btn-ghost" type="button" [disabled]="deletingCategory !== null" (click)="deleteCategory(category)" [attr.aria-label]="'Delete ' + category">
+            {{ deletingCategory === category ? 'Moving transactions…' : 'Delete' }}
+          </button>
+        } @else {
+          <span class="setting-hint">Default · cannot be deleted</span>
+        }
+      </div>
+    }
+  </section>
+
+  <section class="settings-card">
+    <div class="card-title-row">
+      <h2 class="settings-title">Spending alerts</h2>
+      <button type="button" class="btn btn-ghost btn-small" (click)="settings.resetThresholds()">Reset to defaults</button>
+    </div>
+
+    @for (threshold of thresholds; track threshold.key) {
+      <div class="settings-row">
+        <div class="setting-info">
+          <label class="setting-label" [for]="threshold.key">{{ threshold.label }}</label>
+          <span class="setting-hint">{{ threshold.hint }}</span>
+        </div>
+        <div class="threshold-input-wrapper">
+          <input
+            [id]="threshold.key"
+            type="number"
+            min="0"
+            max="1000"
+            class="threshold-input"
+            [ngModel]="settings[threshold.key]()"
+            (ngModelChange)="setThreshold(threshold.key, $event)"
+          />
+          <span class="input-suffix">%</span>
+        </div>
+      </div>
+    }
+  </section>
+</div>

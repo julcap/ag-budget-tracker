@@ -2,6 +2,7 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { tap, throwError } from 'rxjs';
 import { Budget } from '../models/budget';
+import { transactionType } from '../models/transaction';
 import { environment } from '../../environments/environment';
 import { CategoryService, UNCATEGORIZED } from './category.service';
 import { TransactionService } from './transaction.service';
@@ -14,13 +15,8 @@ export class BudgetService {
   private saved = signal<Budget[]>([]);
   readonly loaded = signal(false);
   readonly error = signal('');
-  private expenses = computed(() => this.transactions.transactions().filter(t => {
-    if ((t.type ?? (t.amount < 0 ? 'expense' : 'income')) !== 'expense') return false;
-    const now = new Date();
-    if (t.date === 'Today') return true;
-    const date = new Date(/^\d{4}-/.test(t.date) ? `${t.date}T12:00:00` : `${t.date} ${now.getFullYear()}`);
-    return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
-  }));
+  private expenses = computed(() =>
+    this.transactions.currentMonth().filter(t => transactionType(t) === 'expense'));
   readonly budgets = computed<Budget[]>(() => this.categories.expenseCategories().map(name => {
     const saved = this.saved().find(b => b.name === name && !this.isGlobal(b));
     return { id: saved?.id ?? `category:${name}`, name, limit: saved?.limit ? saved.limit : Infinity,

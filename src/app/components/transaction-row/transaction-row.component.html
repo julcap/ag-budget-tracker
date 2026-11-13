@@ -1,12 +1,10 @@
-<div class="transaction-item" (click)="edit.emit(transaction().id)">
-  <div class="transaction-main">
-    <div class="merchant-name">{{ transaction().merchant }}</div>
-    <div class="transaction-meta">
+<button type="button" class="transaction-item" (click)="edit.emit(transaction().id)">
+  <span class="transaction-main">
+    <span class="merchant-name">{{ transaction().merchant }}</span>
+    <span class="transaction-meta">
       <span class="category-badge">{{ transaction().category }}</span>
-      <span class="date-text">{{ transaction().date }}</span>
-    </div>
-  </div>
-  <div class="amount-value" [class.income]="transaction().amount > 0 || transaction().type === 'income'">
-    {{ (transaction().amount > 0 || transaction().type === 'income' ? '+' : '-') }}${{ (Math.abs(transaction().amount)).toFixed(2) }}
-  </div>
-</div>
+      <span class="date-text">{{ transaction().date | displayDate }}</span>
+    </span>
+  </span>
+  <span class="amount-value" [class.income]="amount() > 0">{{ amount() | money: 'signed' }}</span>
+</button>

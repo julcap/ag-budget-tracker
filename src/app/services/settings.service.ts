@@ -1,80 +1,79 @@
-import { Injectable, signal, effect } from '@angular/core';
+import { computed, Injectable, signal } from '@angular/core';
+import { CURRENCIES, CurrencyCode } from '../utils/money';
 
-export interface SpendingThresholdSettings {
-  spendingWarningPercent: number;     // e.g. 50% for orange text
-  spendingWarningIconPercent: number; // e.g. 75% for warning icon
-  spendingDangerPercent: number;      // e.g. 100% for red text (when spent > income)
+export interface Settings {
+  currency: CurrencyCode;
+  userName: string;
+  userEmail: string;
+  /** Spent % of income at which the spent amount turns orange. */
+  spendingWarningPercent: number;
+  /** Spent % of income at which the warning icon appears. */
+  spendingWarningIconPercent: number;
+  /** Spent % of income at which the spent amount turns red. */
+  spendingDangerPercent: number;
 }
 
-const DEFAULT_SETTINGS: SpendingThresholdSettings = {
+export type ThresholdKey = 'spendingWarningPercent' | 'spendingWarningIconPercent' | 'spendingDangerPercent';
+
+const DEFAULT_THRESHOLDS: Pick<Settings, ThresholdKey> = {
   spendingWarningPercent: 50,
   spendingWarningIconPercent: 75,
   spendingDangerPercent: 100
 };
 
+const DEFAULT_SETTINGS: Settings = {
+  currency: 'USD',
+  userName: '',
+  userEmail: '',
+  ...DEFAULT_THRESHOLDS
+};
+
 const STORAGE_KEY = 'budget_settings';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class SettingsService {
-  private initial = this.loadSettings();
+  private state = signal<Settings>(this.load());
 
-  private _spendingWarningPercent = signal<number>(this.initial.spendingWarningPercent);
-  private _spendingWarningIconPercent = signal<number>(this.initial.spendingWarningIconPercent);
-  private _spendingDangerPercent = signal<number>(this.initial.spendingDangerPercent);
+  readonly currency = computed(() => this.state().currency);
+  readonly userName = computed(() => this.state().userName);
+  readonly userEmail = computed(() => this.state().userEmail);
+  readonly spendingWarningPercent = computed(() => this.state().spendingWarningPercent);
+  readonly spendingWarningIconPercent = computed(() => this.state().spendingWarningIconPercent);
+  readonly spendingDangerPercent = computed(() => this.state().spendingDangerPercent);
 
-  readonly spendingWarningPercent = this._spendingWarningPercent.asReadonly();
-  readonly spendingWarningIconPercent = this._spendingWarningIconPercent.asReadonly();
-  readonly spendingDangerPercent = this._spendingDangerPercent.asReadonly();
-
-  constructor() {
-    effect(() => {
-      const current: SpendingThresholdSettings = {
-        spendingWarningPercent: this._spendingWarningPercent(),
-        spendingWarningIconPercent: this._spendingWarningIconPercent(),
-        spendingDangerPercent: this._spendingDangerPercent()
-      };
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
-      } catch {
-        // ignore storage errors in environments without localStorage
-      }
-    });
+  update(changes: Partial<Settings>) {
+    this.state.update(current => ({ ...current, ...changes }));
+    this.persist();
   }
 
-  setSpendingWarningPercent(percent: number) {
-    this._spendingWarningPercent.set(Math.max(0, percent));
+  setThreshold(key: ThresholdKey, percent: number) {
+    if (Number.isFinite(percent)) this.update({ [key]: Math.max(0, percent) });
   }
 
-  setSpendingWarningIconPercent(percent: number) {
-    this._spendingWarningIconPercent.set(Math.max(0, percent));
+  resetThresholds() {
+    this.update(DEFAULT_THRESHOLDS);
   }
 
-  setSpendingDangerPercent(percent: number) {
-    this._spendingDangerPercent.set(Math.max(0, percent));
-  }
-
-  resetToDefaults() {
-    this._spendingWarningPercent.set(DEFAULT_SETTINGS.spendingWarningPercent);
-    this._spendingWarningIconPercent.set(DEFAULT_SETTINGS.spendingWarningIconPercent);
-    this._spendingDangerPercent.set(DEFAULT_SETTINGS.spendingDangerPercent);
-  }
-
-  private loadSettings(): SpendingThresholdSettings {
+  private persist() {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        return {
-          spendingWarningPercent: typeof parsed.spendingWarningPercent === 'number' ? parsed.spendingWarningPercent : DEFAULT_SETTINGS.spendingWarningPercent,
-          spendingWarningIconPercent: typeof parsed.spendingWarningIconPercent === 'number' ? parsed.spendingWarningIconPercent : DEFAULT_SETTINGS.spendingWarningIconPercent,
-          spendingDangerPercent: typeof parsed.spendingDangerPercent === 'number' ? parsed.spendingDangerPercent : DEFAULT_SETTINGS.spendingDangerPercent
-        };
-      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state()));
     } catch {
-      // ignore JSON parse error
+      // Storage can be unavailable (private mode); settings then last for the session only.
     }
-    return { ...DEFAULT_SETTINGS };
+  }
+
+  private load(): Settings {
+    let stored: Record<string, unknown> = {};
+    try {
+      stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') ?? {};
+    } catch {
+      // Corrupt or unavailable storage: fall back to defaults.
+    }
+    const settings = { ...DEFAULT_SETTINGS };
+    for (const key of Object.keys(DEFAULT_SETTINGS) as (keyof Settings)[]) {
+      if (typeof stored[key] === typeof DEFAULT_SETTINGS[key]) (settings as Record<string, unknown>)[key] = stored[key];
+    }
+    if (!CURRENCIES.includes(settings.currency)) settings.currency = DEFAULT_SETTINGS.currency;
+    return settings;
   }
 }
