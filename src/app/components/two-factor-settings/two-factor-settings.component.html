@@ -1,0 +1,62 @@
+<div class="settings-row">
+  <div class="setting-info">
+    <span class="setting-label">
+      Authenticator app
+      <span class="status" [class.on]="enabled()">{{ enabled() ? 'On' : 'Off' }}</span>
+    </span>
+    <span class="setting-hint">Require a 6-digit code from an app like 1Password, Google Authenticator or Authy when signing in.</span>
+  </div>
+  @if (mode() === 'idle') {
+    @if (enabled()) {
+      <button type="button" class="btn btn-ghost btn-small" (click)="startDisable()">Turn off</button>
+    } @else {
+      <button type="button" class="btn btn-primary btn-small" [disabled]="busy()" (click)="startSetup()">Set up</button>
+    }
+  }
+</div>
+
+@if (notice()) { <p class="notice" role="status">{{ notice() }}</p> }
+
+@if (mode() === 'setup' && setup(); as s) {
+  <div class="setup">
+    <img class="qr" [src]="s.qrCodeDataUrl" width="180" height="180" alt="QR code for your authenticator app" />
+    <div class="setup-steps">
+      <p><strong>1.</strong> Scan this QR code with your authenticator app.</p>
+      <p class="setting-hint">Can't scan? Enter this key manually:</p>
+      <code class="secret">{{ s.secret }}</code>
+      <form (ngSubmit)="confirmSetup()" novalidate>
+        <div class="form-group">
+          <label for="totpCode"><strong>2.</strong> Enter the 6-digit code it shows</label>
+          <input id="totpCode" class="code-input" [formControl]="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" />
+          @if (code.invalid && code.touched) { <div class="form-error">Enter the 6-digit code</div> }
+        </div>
+        @if (error()) { <p class="form-error" role="alert">{{ error() }}</p> }
+        <div class="actions">
+          <button type="button" class="btn btn-secondary" (click)="cancel()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="busy()">{{ busy() ? 'Verifying…' : 'Turn on' }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+@if (mode() === 'disable') {
+  <form class="inline-form" [formGroup]="disableForm" (ngSubmit)="confirmDisable()" novalidate>
+    <p class="setting-hint">Confirm with your password and a current code to turn off two-factor authentication.</p>
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="disablePassword">Password</label>
+        <input id="disablePassword" type="password" formControlName="password" autocomplete="current-password" />
+      </div>
+      <div class="form-group">
+        <label for="disableCode">Authenticator code</label>
+        <input id="disableCode" formControlName="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" />
+      </div>
+    </div>
+    @if (error()) { <p class="form-error" role="alert">{{ error() }}</p> }
+    <div class="actions">
+      <button type="button" class="btn btn-secondary" (click)="cancel()">Cancel</button>
+      <button type="submit" class="btn btn-danger-outline" [disabled]="busy()">{{ busy() ? 'Turning off…' : 'Turn off' }}</button>
+    </div>
+  </form>
+}

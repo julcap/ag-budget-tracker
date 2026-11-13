@@ -1,0 +1,42 @@
+<app-auth-card heading="Create your account" subheading="Track spending and budgets in one place">
+  @if (enabled() === false) {
+    <p class="notice" role="status">Registration is currently closed. Ask an administrator to create an account for you.</p>
+  } @else {
+    <form class="auth-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input id="username" formControlName="username" autocomplete="username" autocapitalize="none" />
+        @if (form.controls.username.invalid && form.controls.username.touched) {
+          <div class="form-error">At least 3 characters</div>
+        }
+      </div>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input id="email" type="email" formControlName="email" autocomplete="email" />
+        @if (form.controls.email.invalid && form.controls.email.touched) {
+          <div class="form-error">Enter a valid email address — we'll send a code to verify it</div>
+        }
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input id="password" type="password" formControlName="password" autocomplete="new-password" />
+        @if (form.controls.password.invalid && form.controls.password.touched) {
+          <div class="form-error">At least 6 characters</div>
+        }
+      </div>
+      <div class="form-group">
+        <label for="confirmPassword">Confirm password</label>
+        <input id="confirmPassword" type="password" formControlName="confirmPassword" autocomplete="new-password" />
+        @if (form.hasError('mismatch') && form.controls.confirmPassword.touched) {
+          <div class="form-error">Passwords don't match</div>
+        }
+      </div>
+
+      @if (error()) {
+        <p class="form-error" role="alert">{{ error() }}</p>
+      }
+      <button type="submit" class="btn btn-primary" [disabled]="busy()">{{ busy() ? 'Creating account…' : 'Create account' }}</button>
+    </form>
+  }
+  <p class="auth-links">Already have an account? <a routerLink="/login">Sign in</a></p>
+</app-auth-card>

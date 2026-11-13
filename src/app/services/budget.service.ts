@@ -4,7 +4,9 @@ import { tap, throwError } from 'rxjs';
 import { Budget } from '../models/budget';
 import { transactionType } from '../models/transaction';
 import { environment } from '../../environments/environment';
-import { CategoryService, UNCATEGORIZED } from './category.service';
+import { CategoryService } from './category.service';
+import { UNCATEGORIZED } from '../models/category';
+import { whenSignedIn } from './session';
 import { TransactionService } from './transaction.service';
 
 @Injectable({ providedIn: 'root' })
@@ -37,7 +39,15 @@ export class BudgetService {
   private savedGlobal = computed(() => [...this.saved()].reverse().find(b => this.isGlobal(b)));
 
   constructor() {
-    this.http.get<Budget[]>(`${environment.apiUrl}/budgets`).subscribe({
+    whenSignedIn(() => this.load(), () => {
+      this.saved.set([]);
+      this.loaded.set(false);
+      this.error.set('');
+    });
+  }
+
+  private load() {
+    this.http.get<Budget[]>(`${environment.apiUrl}/budget-tracker/budgets`).subscribe({
       next: data => { this.saved.set(data); this.loaded.set(true); },
       error: () => this.error.set('Unable to load budgets. Please reload to try again.')
     });
@@ -49,8 +59,8 @@ export class BudgetService {
     const existing = id === 'global' ? this.savedGlobal() : this.saved().find(b => b.id === id);
     const scope = id === 'global' ? 'global' : 'category';
     const request = existing
-      ? this.http.patch<Budget>(`${environment.apiUrl}/budgets/${encodeURIComponent(existing.id)}`, { limit, scope })
-      : this.http.post<Budget>(`${environment.apiUrl}/budgets`, { name: budget.name, spent: budget.spent, limit, scope });
+      ? this.http.patch<Budget>(`${environment.apiUrl}/budget-tracker/budgets/${encodeURIComponent(existing.id)}`, { limit, scope })
+      : this.http.post<Budget>(`${environment.apiUrl}/budget-tracker/budgets`, { name: budget.name, spent: budget.spent, limit, scope });
     return request.pipe(tap(saved => this.saved.update(list => [...list.filter(b => b.id !== saved.id), saved])));
   }
 }

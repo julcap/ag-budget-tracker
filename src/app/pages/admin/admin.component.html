@@ -1,0 +1,68 @@
+<div class="page admin-page">
+  <div class="page-header">
+    <div>
+      <h1>Platform management</h1>
+      <p class="page-subtitle">Accounts, roles and two-factor status</p>
+    </div>
+  </div>
+
+  @if (error()) { <p class="alert" role="alert">{{ error() }}</p> }
+  @if (notice()) { <p class="notice" role="status">{{ notice() }}</p> }
+
+  <div class="stats-grid">
+    <app-balance-card label="Users" [value]="'' + stats().total" />
+    <app-balance-card label="Administrators" [value]="'' + stats().admins" />
+    <app-balance-card label="Two-factor enabled" [value]="stats().totp + ' / ' + stats().total" />
+    <app-balance-card label="Unverified email" [value]="'' + stats().unverified" [valueColor]="stats().unverified ? 'warn' : null" />
+  </div>
+
+  <div class="admin-grid">
+    <section class="panel" aria-labelledby="create-user-title">
+      <h2 class="panel-title" id="create-user-title">Create user</h2>
+      <app-create-user-form (created)="onCreated($event)" />
+    </section>
+
+    <section class="panel users-panel" aria-labelledby="users-title">
+      <div class="panel-header">
+        <h2 class="panel-title" id="users-title">Users</h2>
+        <input type="search" class="user-search" placeholder="Search username or email" aria-label="Search users" (input)="setQuery($event)" />
+      </div>
+
+      @if (loading()) {
+        <p class="empty">Loading users…</p>
+      } @else {
+        <ul class="user-list">
+          @for (user of filteredUsers(); track user.id) {
+            <li class="user-row">
+              <div class="user-main">
+                <span class="user-name">
+                  {{ user.username }}
+                  @if (user.id === currentUserId()) { <span class="you">(you)</span> }
+                </span>
+                <span class="user-meta">{{ user.email || 'No email' }} · joined {{ user.created_at | date: 'mediumDate' }}</span>
+                <span class="badges">
+                  @if (user.is_admin) { <span class="badge badge-accent">Admin</span> }
+                  @if (user.totp_enabled) { <span class="badge badge-ok">2FA</span> }
+                  @if (!user.is_verified) { <span class="badge badge-warn">Unverified</span> }
+                </span>
+              </div>
+              <div class="user-actions">
+                <button type="button" class="btn btn-ghost btn-small" [disabled]="busyId() === user.id || user.id === currentUserId()" (click)="toggleAdmin(user)">
+                  {{ user.is_admin ? 'Remove admin' : 'Make admin' }}
+                </button>
+                @if (user.totp_enabled) {
+                  <button type="button" class="btn btn-ghost btn-small" [disabled]="busyId() === user.id" (click)="resetTotp(user)">Reset 2FA</button>
+                }
+                <button type="button" class="btn btn-danger-outline btn-small" [disabled]="busyId() === user.id || user.id === currentUserId()" (click)="remove(user)">
+                  {{ confirmingDeleteId() === user.id ? 'Confirm delete' : 'Delete' }}
+                </button>
+              </div>
+            </li>
+          } @empty {
+            <li class="empty">{{ users().length ? 'No users match your search.' : 'No users yet.' }}</li>
+          }
+        </ul>
+      }
+    </section>
+  </div>
+</div>

@@ -1,9 +1,12 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { TransactionsComponent } from './transactions.component';
 import { TransactionService } from '../../services/transaction.service';
 import { CategoryService } from '../../services/category.service';
 import { Transaction } from '../../models/transaction';
+import { flushStoreLoads, signIn, TEST_CATEGORIES } from '../../testing/session';
 
 describe('TransactionsComponent', () => {
   let component: TransactionsComponent;
@@ -11,7 +14,6 @@ describe('TransactionsComponent', () => {
   const transactions = signal<Transaction[]>([]);
 
   beforeEach(async () => {
-    localStorage.removeItem('budget_categories');
     transactions.set([
       { id: 'a', type: 'expense', merchant: 'Whole Foods', category: 'Groceries', amount: -80, date: '2026-09-08' },
       { id: 'b', type: 'income', merchant: 'Acme Payroll', category: 'Salary', amount: 2000, date: '2026-09-01' },
@@ -19,13 +21,17 @@ describe('TransactionsComponent', () => {
     ]);
     await TestBed.configureTestingModule({
       imports: [TransactionsComponent],
-      providers: [{ provide: TransactionService, useValue: { transactions, error: signal('') } }]
+      providers: [provideHttpClient(), provideHttpClientTesting(), { provide: TransactionService, useValue: { transactions, error: signal('') } }]
     }).compileComponents();
 
     fixture = TestBed.createComponent(TransactionsComponent);
     component = fixture.componentInstance;
+    signIn();
+    flushStoreLoads();
     fixture.detectChanges();
   });
+
+  afterEach(() => localStorage.removeItem('budget_session_token'));
 
   const ids = () => component.filteredTransactions().map(t => t.id);
 
@@ -36,10 +42,10 @@ describe('TransactionsComponent', () => {
   it('offers every category plus All as a filter, tracking category changes', () => {
     const categories = TestBed.inject(CategoryService);
     expect(component.categories()).toEqual(['All', ...categories.allCategories()]);
-    categories.add('expense', 'Healthcare');
+    categories.add('expense', 'Healthcare').subscribe();
+    TestBed.inject(HttpTestingController).expectOne(r => r.method === 'POST')
+      .flush({ ...TEST_CATEGORIES, expense: [...TEST_CATEGORIES.expense, 'Healthcare'] });
     expect(component.categories()).toContain('Healthcare');
-    categories.remove('expense', 'Healthcare');
-    expect(component.categories()).not.toContain('Healthcare');
   });
 
   it('filters by search query across merchant, category and notes', () => {

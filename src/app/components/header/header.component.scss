@@ -113,7 +113,11 @@
   .nav-links {
     order: 3;
     flex-basis: 100%;
-    gap: 18px;
+    gap: 12px;
     overflow-x: auto;
+  }
+
+  .nav-link {
+    font-size: 12.5px;
   }
 }

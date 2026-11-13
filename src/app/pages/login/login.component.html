@@ -1,90 +1,35 @@
-<div class="login-wrapper">
-  <div class="login-page">
-    <div class="login-card">
-      <div class="brand">
-        <div class="brand-icon" aria-hidden="true">
-          <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-            <rect x="2" y="10" width="4" height="8" rx="1" fill="#fff"/>
-            <rect x="8" y="6" width="4" height="12" rx="1" fill="#fff"/>
-            <rect x="14" y="2" width="4" height="16" rx="1" fill="#fff"/>
-          </svg>
-        </div>
-        <span class="brand-name">Ledger</span>
-      </div>
-
-      @if (!signedIn()) {
-        <div class="card-header">
-          <h1>Welcome back</h1>
-          <p class="sub">Sign in to your budget tracker</p>
-        </div>
-
-        <form [formGroup]="form" (ngSubmit)="submit()">
-          <div class="form-group">
-            <label for="email">Email</label>
-            <input
-              id="email"
-              type="email"
-              autocomplete="email"
-              formControlName="email"
-              placeholder="you@email.com"
-              [class.input-error]="form.controls.email.invalid && form.controls.email.touched"
-            />
-            @if (form.controls.email.invalid && form.controls.email.touched) {
-              <div class="form-error">Enter a valid email address</div>
-            }
-          </div>
-
-          <div class="form-group">
-            <label for="password">Password</label>
-            <div class="password-wrapper">
-              <input
-                id="password"
-                [type]="showPassword() ? 'text' : 'password'"
-                formControlName="password"
-                placeholder="••••••••"
-                [class.input-error]="form.controls.password.invalid && form.controls.password.touched"
-              />
-              <button
-                type="button"
-                class="password-toggle"
-                (click)="toggleShowPassword()"
-                [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
-              >
-                @if (showPassword()) {
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                    <line x1="1" y1="1" x2="23" y2="23"/>
-                  </svg>
-                } @else {
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                    <circle cx="12" cy="12" r="3"/>
-                  </svg>
-                }
-              </button>
-            </div>
-            @if (form.controls.password.invalid && form.controls.password.touched) {
-              <div class="form-error">Password is required</div>
-            }
-          </div>
-
-          <button type="submit" class="btn btn-primary submit-btn">
-            Sign in
-          </button>
-        </form>
-
-        <p class="signup-footer">Demo mode — any email and password will sign you in.</p>
-      } @else {
-        <div class="signed-in-state">
-          <div class="success-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-          </div>
-          <h2>Signed in</h2>
-          <p class="sub">Opening your dashboard…</p>
-        </div>
+<app-auth-card heading="Welcome back" subheading="Sign in to your budget tracker">
+  <form class="auth-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="form-group">
+      <label for="username">Username</label>
+      <input id="username" formControlName="username" autocomplete="username" autocapitalize="none" />
+      @if (form.controls.username.invalid && form.controls.username.touched) {
+        <div class="form-error">Enter your username</div>
       }
     </div>
-  </div>
-</div>
+
+    <div class="form-group">
+      <div class="label-row">
+        <label for="password">Password</label>
+        <a routerLink="/forgot-password" class="small-link">Forgot password?</a>
+      </div>
+      <div class="password-wrapper">
+        <input id="password" [type]="showPassword() ? 'text' : 'password'" formControlName="password" autocomplete="current-password" />
+        <button type="button" class="password-toggle" (click)="toggleShowPassword()" [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
+          {{ showPassword() ? 'Hide' : 'Show' }}
+        </button>
+      </div>
+      @if (form.controls.password.invalid && form.controls.password.touched) {
+        <div class="form-error">Password must be at least 6 characters</div>
+      }
+    </div>
+
+    @if (error()) {
+      <p class="form-error" role="alert">{{ error() }}</p>
+    }
+
+    <button type="submit" class="btn btn-primary" [disabled]="busy()">{{ busy() ? 'Signing in…' : 'Sign in' }}</button>
+  </form>
+
+  <p class="auth-links">No account? <a routerLink="/register">Create one</a></p>
+</app-auth-card>

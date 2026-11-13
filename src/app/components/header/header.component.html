@@ -11,13 +11,13 @@
   </a>
 
   <nav class="nav-links" aria-label="Main">
-    @for (link of links; track link.path) {
+    @for (link of links(); track link.path) {
       <a [routerLink]="link.path" routerLinkActive="active" ariaCurrentWhenActive="page" class="nav-link">{{ link.label }}</a>
     }
   </nav>
 
   <div class="header-right">
-    <a routerLink="/settings" class="user-avatar" [title]="displayName() || 'Set up your profile'" aria-label="Profile settings">
+    <a routerLink="/settings" class="user-avatar" [title]="displayName()" aria-label="Account settings">
       {{ initials() }}
     </a>
     <button type="button" class="logout-btn" (click)="logout()">Log out</button>

@@ -1,79 +1,86 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { environment } from '../../../environments/environment';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { SettingsComponent } from './settings.component';
 import { provideRouter } from '@angular/router';
-import { SettingsService } from '../../services/settings.service';
+import { SettingsComponent } from './settings.component';
+import { flushStoreLoads, signIn, TEST_CATEGORIES, TEST_SETTINGS } from '../../testing/session';
 
 describe('SettingsComponent', () => {
   let component: SettingsComponent;
   let fixture: ComponentFixture<SettingsComponent>;
-  let settingsService: SettingsService;
+  let http: HttpTestingController;
 
   beforeEach(async () => {
-    localStorage.clear();
     await TestBed.configureTestingModule({
       imports: [SettingsComponent],
-      providers: [provideRouter([]), SettingsService, provideHttpClient(), provideHttpClientTesting()]
+      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()]
     }).compileComponents();
 
-    settingsService = TestBed.inject(SettingsService);
+    http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(SettingsComponent);
     component = fixture.componentInstance;
+    signIn();
+    fixture.detectChanges();
+    flushStoreLoads();
     fixture.detectChanges();
   });
 
   afterEach(() => {
-    localStorage.clear();
+    http.verify();
+    localStorage.removeItem('budget_session_token');
   });
 
-  it('moves related expenses before removing their category', () => {
-    const http = TestBed.inject(HttpTestingController);
-    http.expectOne(`${environment.apiUrl}/transactions`).flush([]);
+  it('shows the account from the session', () => {
+    expect(fixture.nativeElement.textContent).toContain('tester@example.com');
+  });
+
+  it('deletes a category with one request', () => {
     component.deleteCategory('Groceries');
-    http.expectOne(`${environment.apiUrl}/transactions`).flush([
-      { id: 'expense', type: 'expense', category: 'Groceries', amount: -20 },
-      { id: 'income', type: 'income', category: 'Groceries', amount: 20 }
-    ]);
-    expect(component.categories.isExpense('Groceries')).toBeTrue();
-    const patch = http.expectOne(`${environment.apiUrl}/transactions/expense`);
-    expect(patch.request.body).toEqual({ category: 'Uncategorized' });
-    patch.flush({ id: 'expense', type: 'expense', category: 'Uncategorized', amount: -20 });
+    expect(component.deletingCategory).toBe('Groceries');
+    const req = http.expectOne('/api/budget-tracker/categories/expense/Groceries');
+    expect(req.request.method).toBe('DELETE');
+    req.flush({ ...TEST_CATEGORIES, expense: TEST_CATEGORIES.expense.filter(c => c !== 'Groceries') });
+
     expect(component.categories.isExpense('Groceries')).toBeFalse();
-    http.verify();
+    expect(component.deletingCategory).toBeNull();
   });
 
-  it('keeps the category when reassignment fails', () => {
-    const http = TestBed.inject(HttpTestingController);
-    http.expectOne(`${environment.apiUrl}/transactions`).flush([]);
+  it('keeps the category and shows the error when deletion fails', () => {
     component.deleteCategory('Rent');
-    http.expectOne(`${environment.apiUrl}/transactions`).flush(null, { status: 500, statusText: 'Error' });
+    http.expectOne('/api/budget-tracker/categories/expense/Rent').flush({ error: 'boom' }, { status: 500, statusText: 'Error' });
     expect(component.categories.isExpense('Rent')).toBeTrue();
-    expect(component.categoryError).toContain('category was kept');
-    http.verify();
+    expect(component.categoryError).toBe('boom');
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
+  it('never deletes Uncategorized', () => {
+    component.deleteCategory('Uncategorized');
+    http.expectNone('/api/budget-tracker/categories/expense/Uncategorized');
   });
 
-  it('should toggle theme', () => {
-    const initial = component.theme();
-    component.toggleTheme();
-    expect(component.theme()).not.toEqual(initial);
+  it('adds a category and shows duplicate errors from the API', () => {
+    component.categoryName = 'groceries';
+    component.addCategory();
+    http.expectOne(r => r.method === 'POST').flush(
+      { error: 'A category with that name already exists' }, { status: 409, statusText: 'Conflict' }
+    );
+    expect(component.categoryError).toBe('A category with that name already exists');
+    expect(component.categoryName).toBe('groceries');
   });
 
-  it('should update spending thresholds from input values', () => {
+  it('saves thresholds and currency to the account', () => {
     component.setThreshold('spendingWarningPercent', '45');
-    expect(settingsService.spendingWarningPercent()).toBe(45);
+    const threshold = http.expectOne(r => r.method === 'PUT');
+    expect(threshold.request.body).toEqual({ spendingWarningPercent: 45 });
+    threshold.flush({ ...TEST_SETTINGS, spendingWarningPercent: 45 });
+    expect(component.settings.spendingWarningPercent()).toBe(45);
 
-    component.setThreshold('spendingDangerPercent', 95);
-    expect(settingsService.spendingDangerPercent()).toBe(95);
+    component.setCurrency('DKK');
+    http.expectOne(r => r.method === 'PUT').flush({ ...TEST_SETTINGS, currency: 'DKK' });
+    expect(component.settings.currency()).toBe('DKK');
   });
 
-  it('should persist the selected currency', () => {
-    component.setCurrency('DKK');
-    expect(settingsService.currency()).toBe('DKK');
+  it('toggles the theme through the account settings', () => {
+    component.toggleTheme();
+    expect(http.expectOne(r => r.method === 'PUT').request.body).toEqual({ theme: 'dark' });
   });
 });

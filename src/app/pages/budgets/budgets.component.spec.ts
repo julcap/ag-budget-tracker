@@ -4,6 +4,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { environment } from '../../../environments/environment';
+import { signIn, TEST_CATEGORIES, TEST_SETTINGS } from '../../testing/session';
 
 import { BudgetsComponent } from './budgets.component';
 
@@ -20,8 +21,16 @@ describe('BudgetsComponent', () => {
     
     fixture = TestBed.createComponent(BudgetsComponent);
     component = fixture.componentInstance;
+    signIn();
+    fixture.detectChanges();
+    // Budgets and transactions are answered inside each test; categories and settings here.
+    const http = TestBed.inject(HttpTestingController);
+    http.expectOne('/api/budget-tracker/categories').flush(TEST_CATEGORIES);
+    http.expectOne('/api/budget-tracker/settings').flush(TEST_SETTINGS);
     fixture.detectChanges();
   });
+
+  afterEach(() => localStorage.removeItem('budget_session_token'));
 
   it('should create', () => {
     expect(component).toBeTruthy();
@@ -29,8 +38,8 @@ describe('BudgetsComponent', () => {
 
   it('shows unlimited categories without warnings and saves the global editor using the API ID', () => {
     const http = TestBed.inject(HttpTestingController);
-    http.expectOne(`${environment.apiUrl}/budgets`).flush([]);
-    http.expectOne(`${environment.apiUrl}/transactions`).flush([
+    http.expectOne(`${environment.apiUrl}/budget-tracker/budgets`).flush([]);
+    http.expectOne(`${environment.apiUrl}/budget-tracker/transactions`).flush([
       { id: 'expense', type: 'expense', category: 'Rent', date: 'Today', amount: -500 }
     ]);
     fixture.detectChanges();
@@ -48,7 +57,7 @@ describe('BudgetsComponent', () => {
     input.dispatchEvent(new Event('input'));
     fixture.detectChanges();
     (hero.querySelector('.btn-primary') as HTMLButtonElement).click();
-    const save = http.expectOne(`${environment.apiUrl}/budgets`);
+    const save = http.expectOne(`${environment.apiUrl}/budget-tracker/budgets`);
     save.flush({ ...save.request.body, id: 'generated-id' });
     fixture.detectChanges();
     expect(hero.querySelector('.budget-meta')?.textContent).toContain('$2,000.00');
@@ -61,16 +70,16 @@ describe('BudgetsComponent', () => {
     expect(fixture.nativeElement.querySelectorAll('.budget-card').length).toBe(8);
 
     const http = TestBed.inject(HttpTestingController);
-    http.expectOne(`${environment.apiUrl}/budgets`).flush([
+    http.expectOne(`${environment.apiUrl}/budget-tracker/budgets`).flush([
       { id: 'a', name: 'Rent', spent: 980, limit: 1000 }
     ]);
-    http.expectOne(`${environment.apiUrl}/transactions`).flush([]);
-    TestBed.inject(CategoryService).add('expense', 'Healthcare');
+    http.expectOne(`${environment.apiUrl}/budget-tracker/transactions`).flush([]);
+    TestBed.inject(CategoryService).add('expense', 'Healthcare').subscribe();
+    http.expectOne(r => r.method === 'POST').flush({ ...TEST_CATEGORIES, expense: [...TEST_CATEGORIES.expense, 'Healthcare'] });
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelectorAll('.budget-card').length).toBe(9);
     expect(fixture.nativeElement.querySelector('.budget-name').textContent).toContain('Total expenses');
-    TestBed.inject(CategoryService).remove('expense', 'Healthcare');
     http.verify();
   });
 });

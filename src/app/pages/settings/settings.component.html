@@ -3,20 +3,26 @@
     <h1>Settings</h1>
   </div>
 
+  @if (settings.error()) {
+    <p class="alert" role="alert">{{ settings.error() }}</p>
+  }
+
   <section class="settings-card">
-    <h2 class="settings-title">Profile</h2>
-    <div class="form-grid">
-      <div class="form-group">
-        <label for="profileName">Name</label>
-        <input id="profileName" type="text" autocomplete="name" placeholder="Your name"
-               [ngModel]="settings.userName()" (ngModelChange)="settings.update({ userName: $event })" />
-      </div>
-      <div class="form-group">
-        <label for="profileEmail">Email</label>
-        <input id="profileEmail" type="email" autocomplete="email" placeholder="you@email.com"
-               [ngModel]="settings.userEmail()" (ngModelChange)="settings.update({ userEmail: $event })" />
-      </div>
+    <h2 class="settings-title">Account</h2>
+    <div class="settings-row">
+      <span class="setting-label">Username</span>
+      <span class="account-value">{{ user()?.username }}</span>
     </div>
+    <div class="settings-row">
+      <span class="setting-label">Email</span>
+      <span class="account-value">{{ user()?.email || 'Not set' }}</span>
+    </div>
+    <app-change-password />
+  </section>
+
+  <section class="settings-card">
+    <h2 class="settings-title">Two-factor authentication</h2>
+    <app-two-factor-settings />
   </section>
 
   <section class="settings-card">
@@ -102,6 +108,7 @@
             max="1000"
             class="threshold-input"
             [ngModel]="settings[threshold.key]()"
+            [ngModelOptions]="{ updateOn: 'blur' }"
             (ngModelChange)="setThreshold(threshold.key, $event)"
           />
           <span class="input-suffix">%</span>

@@ -1,3 +1,5 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { computed, signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
@@ -5,6 +7,8 @@ import { DashboardComponent } from './dashboard.component';
 import { TransactionService } from '../../services/transaction.service';
 import { SettingsService } from '../../services/settings.service';
 import { Transaction } from '../../models/transaction';
+import { flushStoreLoads, signIn, TEST_SETTINGS } from '../../testing/session';
+import { Settings } from '../../services/settings.service';
 import { isSameMonth, parseTransactionDate, todayIsoDate } from '../../utils/date';
 
 describe('DashboardComponent', () => {
@@ -24,6 +28,8 @@ describe('DashboardComponent', () => {
       imports: [DashboardComponent],
       providers: [
         provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
         {
           provide: TransactionService,
           useValue: {
@@ -38,10 +44,25 @@ describe('DashboardComponent', () => {
     settings = TestBed.inject(SettingsService);
     fixture = TestBed.createComponent(DashboardComponent);
     component = fixture.componentInstance;
+    signIn();
+    flushStoreLoads();
     fixture.detectChanges();
   });
 
   afterEach(() => localStorage.clear());
+
+  /** Saves settings through the service and answers the PUT like the API would (merging). */
+  function applySettings(changes: Partial<Settings>) {
+    const current: Settings = {
+      ...TEST_SETTINGS,
+      currency: settings.currency(),
+      spendingWarningPercent: settings.spendingWarningPercent(),
+      spendingWarningIconPercent: settings.spendingWarningIconPercent(),
+      spendingDangerPercent: settings.spendingDangerPercent()
+    };
+    settings.update(changes);
+    TestBed.inject(HttpTestingController).expectOne(r => r.method === 'PUT').flush({ ...current, ...changes });
+  }
 
   it('shows zeros and empty states instead of placeholder data when there are no transactions', () => {
     expect(component.balance()).toBe('$0.00');
@@ -79,13 +100,13 @@ describe('DashboardComponent', () => {
     expect(component.spentTone()).toBe('warn');
     expect(component.isSpentWarningIcon()).toBeFalse();
 
-    settings.setThreshold('spendingWarningIconPercent', 60);
+    applySettings({ spendingWarningIconPercent: 60 });
     expect(component.isSpentWarningIcon()).toBeTrue();
 
-    settings.setThreshold('spendingDangerPercent', 55);
+    applySettings({ spendingDangerPercent: 55 });
     expect(component.spentTone()).toBe('danger');
 
-    settings.resetThresholds();
+    applySettings({ spendingWarningPercent: 50, spendingWarningIconPercent: 75, spendingDangerPercent: 100 });
     transactions.set([tx('salary', 'income', 1000, 'Salary'), tx('food', 'expense', -100, 'Groceries')]);
     expect(component.spentTone()).toBeNull();
   });
@@ -133,7 +154,7 @@ describe('DashboardComponent', () => {
 
   it('formats amounts in the selected currency', () => {
     transactions.set([tx('salary', 'income', 1234.5, 'Salary')]);
-    settings.update({ currency: 'EUR' });
+    applySettings({ currency: 'EUR' });
     expect(component.balance()).toBe('€1,234.50');
   });
 });

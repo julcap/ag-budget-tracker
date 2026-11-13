@@ -1,12 +1,13 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { forkJoin, map, of, switchMap, tap } from 'rxjs';
+import { map, tap } from 'rxjs';
 import { Transaction, TransactionDraft, TransactionType, transactionType } from '../models/transaction';
-import { UNCATEGORIZED } from './category.service';
+import { UNCATEGORIZED } from '../models/category';
+import { whenSignedIn } from './session';
 import { isSameMonth, parseTransactionDate } from '../utils/date';
 import { environment } from '../../environments/environment';
 
-const API = `${environment.apiUrl}/transactions`;
+const API = `${environment.apiUrl}/budget-tracker/transactions`;
 
 @Injectable({ providedIn: 'root' })
 export class TransactionService {
@@ -23,10 +24,7 @@ export class TransactionService {
   });
 
   constructor() {
-    this.http.get<Transaction[]>(API).subscribe({
-      next: data => { this._transactions.set(data); this.loaded.set(true); },
-      error: () => this.error.set('Unable to load transactions. Is the API running?')
-    });
+    whenSignedIn(() => this.load(), () => this.clear());
   }
 
   add(transaction: TransactionDraft) {
@@ -49,15 +47,22 @@ export class TransactionService {
     );
   }
 
-  reassignCategory(type: TransactionType, category: string) {
-    return this.http.get<Transaction[]>(API).pipe(
-      switchMap(transactions => {
-        const related = transactions.filter(t => transactionType(t) === type && t.category === category);
-        return related.length
-          ? forkJoin(related.map(t => this.update(t.id, { category: UNCATEGORIZED })))
-          : of([]);
-      })
-    );
+  markUncategorized(type: TransactionType, category: string) {
+    this._transactions.update(list => list.map(t =>
+      transactionType(t) === type && t.category === category ? { ...t, category: UNCATEGORIZED } : t));
+  }
+
+  private load() {
+    this.http.get<Transaction[]>(API).subscribe({
+      next: data => { this._transactions.set(data); this.loaded.set(true); },
+      error: () => this.error.set('Unable to load transactions. Please reload to try again.')
+    });
+  }
+
+  private clear() {
+    this._transactions.set([]);
+    this.loaded.set(false);
+    this.error.set('');
   }
 
   private replace(updated: Transaction) {

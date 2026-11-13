@@ -1,4 +1,3 @@
-import { Category } from './category';
 import { parseTransactionDate } from '../utils/date';
 
 export type TransactionType = 'expense' | 'income';
@@ -7,7 +6,7 @@ export interface Transaction {
   id: string;
   type: TransactionType;
   merchant: string;
-  category: Category | string;
+  category: string;
   /** ISO `YYYY-MM-DD`. Older records may hold `Today` or `Sep 8`; see `parseTransactionDate`. */
   date: string;
   amount: number;

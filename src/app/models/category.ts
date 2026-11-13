@@ -1,21 +1,6 @@
-// Starting categories; users can add/remove their own in Settings (see CategoryService).
-export const EXPENSE_CATEGORIES = [
-  'Groceries',
-  'Rent',
-  'Transport',
-  'Entertainment',
-  'Utilities',
-  'Other'
-] as const;
+import { TransactionType } from './transaction';
 
-export const INCOME_CATEGORIES = [
-  'Salary',
-  'Freelance',
-  'Investments',
-  'Gift',
-  'Other'
-] as const;
+// The default category lists live on the server (seeded per user on first use).
+export const UNCATEGORIZED = 'Uncategorized';
 
-export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
-export type IncomeCategory = (typeof INCOME_CATEGORIES)[number];
-export type Category = ExpenseCategory | IncomeCategory;
+export type CategoryLists = Record<TransactionType, string[]>;

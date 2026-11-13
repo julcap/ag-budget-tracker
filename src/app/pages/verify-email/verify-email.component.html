@@ -1,0 +1,25 @@
+<app-auth-card heading="Verify your email" [subheading]="email ? 'We sent a 6-digit code to ' + email : 'Enter the 6-digit code we emailed you'">
+  @if (!email) {
+    <p class="notice">Missing email address. <a routerLink="/login">Sign in</a> again to get a new code.</p>
+  } @else {
+    <form class="auth-form" (ngSubmit)="submit()" novalidate>
+      <div class="form-group">
+        <label for="code">Verification code</label>
+        <input id="code" class="code-input" [formControl]="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" />
+        @if (code.invalid && code.touched) {
+          <div class="form-error">Enter the 6-digit code</div>
+        }
+      </div>
+      @if (notice()) { <p class="notice" role="status">{{ notice() }}</p> }
+      @if (error()) { <p class="form-error" role="alert">{{ error() }}</p> }
+      <button type="submit" class="btn btn-primary" [disabled]="busy()">{{ busy() ? 'Verifying…' : 'Verify email' }}</button>
+    </form>
+    <p class="auth-links">
+      Didn't get it?
+      <button type="button" class="link-button" [disabled]="cooldown.remaining() > 0" (click)="resend()">
+        {{ cooldown.remaining() > 0 ? 'Resend in ' + cooldown.remaining() + 's' : 'Send a new code' }}
+      </button>
+    </p>
+  }
+  <p class="auth-links"><a routerLink="/login">Back to sign in</a></p>
+</app-auth-card>

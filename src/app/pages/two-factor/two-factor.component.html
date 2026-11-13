@@ -1,0 +1,15 @@
+<app-auth-card heading="Two-factor authentication" subheading="Enter the 6-digit code from your authenticator app">
+  <form class="auth-form" (ngSubmit)="submit()" novalidate>
+    <div class="form-group">
+      <label for="code">Authentication code</label>
+      <input id="code" class="code-input" [formControl]="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" />
+      @if (code.invalid && code.touched) {
+        <div class="form-error">Enter the 6-digit code</div>
+      }
+    </div>
+    @if (error()) { <p class="form-error" role="alert">{{ error() }}</p> }
+    <button type="submit" class="btn btn-primary" [disabled]="busy()">{{ busy() ? 'Verifying…' : 'Verify' }}</button>
+  </form>
+  <p class="auth-links">Lost your device? Ask an administrator to reset two-factor authentication.</p>
+  <p class="auth-links"><a routerLink="/login">Back to sign in</a></p>
+</app-auth-card>

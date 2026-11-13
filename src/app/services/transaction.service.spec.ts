@@ -4,9 +4,10 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TransactionService } from './transaction.service';
 import { environment } from '../../environments/environment';
 import { todayIsoDate } from '../utils/date';
+import { signIn, signOut } from '../testing/session';
 
 describe('TransactionService', () => {
-  const API = `${environment.apiUrl}/transactions`;
+  const API = `${environment.apiUrl}/budget-tracker/transactions`;
   let service: TransactionService;
   let http: HttpTestingController;
 
@@ -14,9 +15,20 @@ describe('TransactionService', () => {
     TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
     service = TestBed.inject(TransactionService);
     http = TestBed.inject(HttpTestingController);
+    signIn();
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    http.verify();
+    localStorage.removeItem('budget_session_token');
+  });
+
+  it('clears everything on sign-out', () => {
+    http.expectOne(API).flush([{ id: 'a', type: 'expense', merchant: 'A', category: 'Rent', amount: -1, date: todayIsoDate() }]);
+    signOut();
+    expect(service.transactions()).toEqual([]);
+    expect(service.loaded()).toBeFalse();
+  });
 
   it('loads transactions and exposes the current month', () => {
     http.expectOne(API).flush([

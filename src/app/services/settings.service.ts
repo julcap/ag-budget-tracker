@@ -1,16 +1,20 @@
-import { computed, Injectable, signal } from '@angular/core';
-import { CURRENCIES, CurrencyCode } from '../utils/money';
+import { computed, inject, Injectable, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { CurrencyCode } from '../utils/money';
+import { whenSignedIn } from './session';
+import { environment } from '../../environments/environment';
+
+export type Theme = 'light' | 'dark';
 
 export interface Settings {
   currency: CurrencyCode;
-  userName: string;
-  userEmail: string;
   /** Spent % of income at which the spent amount turns orange. */
   spendingWarningPercent: number;
   /** Spent % of income at which the warning icon appears. */
   spendingWarningIconPercent: number;
   /** Spent % of income at which the spent amount turns red. */
   spendingDangerPercent: number;
+  theme: Theme;
 }
 
 export type ThresholdKey = 'spendingWarningPercent' | 'spendingWarningIconPercent' | 'spendingDangerPercent';
@@ -21,59 +25,57 @@ const DEFAULT_THRESHOLDS: Pick<Settings, ThresholdKey> = {
   spendingDangerPercent: 100
 };
 
-const DEFAULT_SETTINGS: Settings = {
-  currency: 'USD',
-  userName: '',
-  userEmail: '',
-  ...DEFAULT_THRESHOLDS
-};
+// Used until the signed-in user's settings arrive (and after sign-out).
+const DEFAULT_SETTINGS: Settings = { currency: 'USD', theme: 'light', ...DEFAULT_THRESHOLDS };
 
-const STORAGE_KEY = 'budget_settings';
+const API = `${environment.apiUrl}/budget-tracker/settings`;
 
+/** Per-account preferences, stored by the API. */
 @Injectable({ providedIn: 'root' })
 export class SettingsService {
-  private state = signal<Settings>(this.load());
+  private http = inject(HttpClient);
+  private state = signal<Settings>(DEFAULT_SETTINGS);
 
+  readonly loaded = signal(false);
+  readonly error = signal('');
   readonly currency = computed(() => this.state().currency);
-  readonly userName = computed(() => this.state().userName);
-  readonly userEmail = computed(() => this.state().userEmail);
+  readonly theme = computed(() => this.state().theme);
   readonly spendingWarningPercent = computed(() => this.state().spendingWarningPercent);
   readonly spendingWarningIconPercent = computed(() => this.state().spendingWarningIconPercent);
   readonly spendingDangerPercent = computed(() => this.state().spendingDangerPercent);
 
+  constructor() {
+    whenSignedIn(() => this.load(), () => {
+      this.state.set(DEFAULT_SETTINGS);
+      this.loaded.set(false);
+      this.error.set('');
+    });
+  }
+
+  /** Saves a partial change; the signals take the server's merged result on success. */
   update(changes: Partial<Settings>) {
-    this.state.update(current => ({ ...current, ...changes }));
-    this.persist();
+    this.error.set('');
+    this.http.put<Settings>(API, changes).subscribe({
+      next: settings => this.state.set(settings),
+      error: () => this.error.set('Could not save your settings. Please try again.')
+    });
   }
 
   setThreshold(key: ThresholdKey, percent: number) {
-    if (Number.isFinite(percent)) this.update({ [key]: Math.max(0, percent) });
+    if (Number.isFinite(percent)) this.update({ [key]: Math.min(1000, Math.max(0, percent)) });
   }
 
   resetThresholds() {
     this.update(DEFAULT_THRESHOLDS);
   }
 
-  private persist() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state()));
-    } catch {
-      // Storage can be unavailable (private mode); settings then last for the session only.
-    }
-  }
-
-  private load(): Settings {
-    let stored: Record<string, unknown> = {};
-    try {
-      stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') ?? {};
-    } catch {
-      // Corrupt or unavailable storage: fall back to defaults.
-    }
-    const settings = { ...DEFAULT_SETTINGS };
-    for (const key of Object.keys(DEFAULT_SETTINGS) as (keyof Settings)[]) {
-      if (typeof stored[key] === typeof DEFAULT_SETTINGS[key]) (settings as Record<string, unknown>)[key] = stored[key];
-    }
-    if (!CURRENCIES.includes(settings.currency)) settings.currency = DEFAULT_SETTINGS.currency;
-    return settings;
+  private load() {
+    this.http.get<Settings>(API).subscribe({
+      next: settings => {
+        this.state.set(settings);
+        this.loaded.set(true);
+      },
+      error: () => this.error.set('Unable to load your settings.')
+    });
   }
 }

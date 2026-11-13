@@ -2,25 +2,29 @@ import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ThemeService } from '../../services/theme.service';
 import { SettingsService, ThresholdKey } from '../../services/settings.service';
-import { CategoryService, UNCATEGORIZED } from '../../services/category.service';
-import { TransactionService } from '../../services/transaction.service';
+import { CategoryService } from '../../services/category.service';
+import { UNCATEGORIZED } from '../../models/category';
+import { apiErrorMessage } from '../../utils/http-error';
 import { TransactionType } from '../../models/transaction';
 import { CURRENCIES, CurrencyCode, currencySymbol } from '../../utils/money';
+import { AuthService } from '../../services/auth.service';
+import { ChangePasswordComponent } from '../../components/change-password/change-password.component';
+import { TwoFactorSettingsComponent } from '../../components/two-factor-settings/two-factor-settings.component';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, ChangePasswordComponent, TwoFactorSettingsComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss'
 })
 export class SettingsComponent {
   private themeService = inject(ThemeService);
-  private transactions = inject(TransactionService);
   readonly settings = inject(SettingsService);
   readonly categories = inject(CategoryService);
 
   readonly theme = this.themeService.theme;
+  readonly user = inject(AuthService).user;
   readonly uncategorized = UNCATEGORIZED;
   readonly currencies = CURRENCIES.map(code => ({ code, label: `${code} (${currencySymbol(code)})` }));
   readonly thresholds: { key: ThresholdKey; label: string; hint: string }[] = [
@@ -36,25 +40,20 @@ export class SettingsComponent {
 
   addCategory() {
     this.categoryError = '';
-    try {
-      if (this.categories.add(this.categoryType, this.categoryName)) this.categoryName = '';
-      else this.categoryError = 'Enter a unique category name.';
-    } catch { this.categoryError = 'Unable to save categories in this browser.'; }
+    this.categories.add(this.categoryType, this.categoryName).subscribe({
+      next: () => (this.categoryName = ''),
+      error: err => (this.categoryError = apiErrorMessage(err, 'Could not add the category.'))
+    });
   }
 
   deleteCategory(name: string) {
     if (this.deletingCategory || name === UNCATEGORIZED) return;
-    const type = this.categoryType;
     this.deletingCategory = name;
     this.categoryError = '';
-    this.transactions.reassignCategory(type, name).subscribe({
-      next: () => {
-        try { this.categories.remove(type, name); }
-        catch { this.categoryError = 'Transactions were moved, but the category could not be removed. Please retry.'; }
-        this.deletingCategory = null;
-      },
-      error: () => {
-        this.categoryError = 'Could not move all transactions. The category was kept; please retry.';
+    this.categories.remove(this.categoryType, name).subscribe({
+      next: () => (this.deletingCategory = null),
+      error: err => {
+        this.categoryError = apiErrorMessage(err, 'Could not delete the category. Please retry.');
         this.deletingCategory = null;
       }
     });

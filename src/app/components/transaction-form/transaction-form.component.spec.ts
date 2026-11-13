@@ -1,3 +1,5 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { of, throwError } from 'rxjs';
@@ -6,6 +8,7 @@ import { TransactionService } from '../../services/transaction.service';
 import { CategoryService } from '../../services/category.service';
 import { Transaction } from '../../models/transaction';
 import { todayIsoDate } from '../../utils/date';
+import { flushStoreLoads, signIn } from '../../testing/session';
 
 describe('TransactionFormComponent', () => {
   let component: TransactionFormComponent;
@@ -26,7 +29,6 @@ describe('TransactionFormComponent', () => {
   }
 
   beforeEach(async () => {
-    localStorage.removeItem('budget_categories');
     service = {
       transactions: signal<Transaction[]>([
         { id: 'tx-1', type: 'income', merchant: 'Target', amount: 55, category: 'Salary', date: '2026-09-05', notes: 'Bonus' },
@@ -39,8 +41,12 @@ describe('TransactionFormComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [TransactionFormComponent],
-      providers: [{ provide: TransactionService, useValue: service }]
+      providers: [provideHttpClient(), provideHttpClientTesting(), { provide: TransactionService, useValue: service }]
     }).compileComponents();
+    // The form takes its default category from the loaded lists, as it does in the app.
+    TestBed.inject(CategoryService);
+    signIn();
+    flushStoreLoads();
   });
 
   it('starts as a new expense dated today', () => {
